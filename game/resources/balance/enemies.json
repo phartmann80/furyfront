@@ -1,0 +1,64 @@
+{
+  "version": "1.1.0",
+  "archetypes": [
+    {
+      "id": "sb_phantom",
+      "name": "Phantom Infiltrator",
+      "role": "assault",
+      "health": 100,
+      "armor": 0,
+      "move": 1.08,
+      "weaponId": "smg_wasp",
+      "skillDefault": "trained",
+      "visionM": 28,
+      "fovDeg": 70,
+      "hearM": 18
+    },
+    {
+      "id": "sb_hacker",
+      "name": "Signal Hacker",
+      "role": "objective",
+      "health": 90,
+      "armor": 0,
+      "move": 1.0,
+      "weaponId": "pis_k5",
+      "skillDefault": "trained",
+      "visionM": 24,
+      "fovDeg": 65,
+      "hearM": 16,
+      "hacksObjectives": true
+    },
+    {
+      "id": "sb_enforcer",
+      "name": "Heavy Enforcer",
+      "role": "armor",
+      "health": 100,
+      "armor": 50,
+      "move": 0.88,
+      "weaponId": "ar_kf16",
+      "skillDefault": "veteran",
+      "visionM": 32,
+      "fovDeg": 60,
+      "hearM": 14
+    },
+    {
+      "id": "sb_commander",
+      "name": "Shadowbreaker Commander",
+      "role": "elite",
+      "health": 100,
+      "armor": 40,
+      "move": 1.02,
+      "weaponId": "ar_kf16",
+      "skillDefault": "elite",
+      "visionM": 36,
+      "fovDeg": 75,
+      "hearM": 20
+    }
+  ],
+  "skillProfiles": {
+    "recruit": { "accuracy": 0.35, "reactionS": 0.55, "grenadeChance": 0.05, "flank": 0.1 },
+    "trained": { "accuracy": 0.55, "reactionS": 0.35, "grenadeChance": 0.12, "flank": 0.35 },
+    "veteran": { "accuracy": 0.7, "reactionS": 0.22, "grenadeChance": 0.2, "flank": 0.55 },
+    "elite": { "accuracy": 0.82, "reactionS": 0.14, "grenadeChance": 0.28, "flank": 0.75 }
+  }
+}

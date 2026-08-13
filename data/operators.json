@@ -1,0 +1,213 @@
+{
+  "version": "1.0.0",
+  "operators": [
+    {
+      "id": "op_vex",
+      "name": "Vex",
+      "role": "assault",
+      "unlockLevel": 1,
+      "silhouette": "compact-undercut-light-plate",
+      "moveMod": 1.0,
+      "passive": {
+        "id": "bloodrush",
+        "tacSprintDuration": 1.08,
+        "reloadBelow50Hp": 0.9
+      },
+      "active": {
+        "id": "stim_dash",
+        "cooldownS": 28,
+        "dashM": 6,
+        "heal": 15,
+        "healS": 2,
+        "gunReadyDelayS": 0.4
+      }
+    },
+    {
+      "id": "op_bishop",
+      "name": "Bishop",
+      "role": "tactician",
+      "unlockLevel": 8,
+      "silhouette": "radio-pack-beret-rect-vest",
+      "moveMod": 1.0,
+      "passive": {
+        "id": "chain_of_command",
+        "pingDuration": 1.2,
+        "objectiveScore": 1.1
+      },
+      "active": {
+        "id": "pulse_sweep",
+        "cooldownS": 45,
+        "durationS": 1.2,
+        "radiusM": 18,
+        "markS": 4
+      }
+    },
+    {
+      "id": "op_nyx",
+      "name": "Nyx",
+      "role": "stealth",
+      "unlockLevel": 12,
+      "silhouette": "hood-wrapped-face-low-head",
+      "moveMod": 1.02,
+      "passive": {
+        "id": "soft_step",
+        "crouchFootstep": 0.65,
+        "nameplateM": 12
+      },
+      "active": {
+        "id": "veil",
+        "cooldownS": 40,
+        "durationS": 3.5,
+        "brokenOnFire": true
+      }
+    },
+    {
+      "id": "op_golem",
+      "name": "Golem",
+      "role": "heavy",
+      "unlockLevel": 15,
+      "silhouette": "pauldrons-thick-legs-widest",
+      "moveMod": 0.94,
+      "passive": {
+        "id": "plated",
+        "absorb": 15,
+        "regenOutOfCombatS": 8
+      },
+      "active": {
+        "id": "riot_wall",
+        "cooldownS": 50,
+        "hp": 250,
+        "lifeS": 20,
+        "size": [2.2, 1.4]
+      }
+    },
+    {
+      "id": "op_wraith",
+      "name": "Wraith",
+      "role": "recon",
+      "unlockLevel": 18,
+      "silhouette": "long-coat-rangefinder-tri-hood",
+      "moveMod": 1.0,
+      "passive": {
+        "id": "tracker",
+        "markS": 1.5
+      },
+      "active": {
+        "id": "heartbeat",
+        "cooldownS": 35,
+        "durationS": 2.5,
+        "coneM": 24
+      }
+    },
+    {
+      "id": "op_rook",
+      "name": "Rook",
+      "role": "support",
+      "unlockLevel": 22,
+      "silhouette": "square-pack-plate-medic-slash",
+      "moveMod": 0.98,
+      "passive": {
+        "id": "splints",
+        "revive": 0.75,
+        "allyRegenHpPerS": 2,
+        "idleS": 4
+      },
+      "active": {
+        "id": "plate_toss",
+        "cooldownS": 40,
+        "absorb": 25,
+        "durationS": 20
+      }
+    },
+    {
+      "id": "op_hex",
+      "name": "Hex",
+      "role": "disruptor",
+      "unlockLevel": 28,
+      "silhouette": "angular-helm-cables-bracer",
+      "moveMod": 1.0,
+      "passive": {
+        "id": "grounded",
+        "empDurationOnSelf": 0.7
+      },
+      "active": {
+        "id": "blackout",
+        "cooldownS": 55,
+        "radiusM": 8,
+        "durationS": 3
+      }
+    },
+    {
+      "id": "op_sable",
+      "name": "Sable",
+      "role": "marksman",
+      "unlockLevel": 35,
+      "silhouette": "cape-calf-patrol-cap-rifle-lean",
+      "moveMod": 0.99,
+      "passive": {
+        "id": "cold_bore",
+        "adsIdleS": 1.2,
+        "rangeBonus": 1.1,
+        "noGlintFirstShot": true
+      },
+      "active": {
+        "id": "hold",
+        "cooldownS": 30,
+        "durationS": 2.8,
+        "sway": 0.2,
+        "flinch": 0.5
+      }
+    },
+    {
+      "id": "op_ash",
+      "name": "Ash",
+      "role": "demolitions",
+      "unlockLevel": 40,
+      "season": 1,
+      "silhouette": "stocky-bandolier-short-helm",
+      "moveMod": 0.97,
+      "passive": { "id": "blast_radius", "explosiveRadius": 1.12, "explosiveDamage": 1.0 },
+      "active": { "id": "extra_lethal", "cooldownS": 90 }
+    },
+    {
+      "id": "op_kite",
+      "name": "Kite",
+      "role": "mobility",
+      "unlockLevel": 42,
+      "season": 1,
+      "silhouette": "slim-harness-long-limbs",
+      "moveMod": 1.04,
+      "passive": { "id": "parkour", "mantleBonusM": 0.4, "slide": 1.15 },
+      "active": { "id": "grapple", "cooldownS": 25, "rangeM": 18, "noFireInFlight": true }
+    },
+    {
+      "id": "op_omen",
+      "name": "Omen",
+      "role": "medic",
+      "unlockLevel": 46,
+      "season": 1,
+      "silhouette": "medium-satchel-open-face",
+      "moveMod": 1.0,
+      "passive": { "id": "triage", "downedBleed": 0.8 },
+      "active": {
+        "id": "stim_field",
+        "cooldownS": 45,
+        "radiusM": 4,
+        "durationS": 8,
+        "hpPerS": 8,
+        "capHp": 20
+      }
+    },
+    {
+      "id": "op_forge",
+      "name": "Forge",
+      "role": "engineer",
+      "unlockLevel": 50,
+      "season": 1,
+      "silhouette": "tool-pack-asymmetric-shoulder",
+      "moveMod": 0.98,
+      "passive": { "id": "wrench", "trophyChannelS": 2.5, "trophyCdS": 12 },
+      "active": { "id": "overclock", "cooldownS": 50, "sentryRpm": 1.3, "durationS": 8 }
+    }
+  ]
+}

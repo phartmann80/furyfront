@@ -1,0 +1,87 @@
+{
+  "version": "1.1.0",
+  "maps": [
+    {
+      "id": "map_ironfall",
+      "name": "Ironfall Depot",
+      "biome": "military-installation",
+      "v01": true,
+      "graybox": true,
+      "sizeM": [90, 70],
+      "modes": ["shadow_assault", "tdm", "dom", "snd"],
+      "scale": ["pve4", "6v6"],
+      "areas": [
+        "security_gate",
+        "command_center",
+        "barracks",
+        "armory",
+        "comms",
+        "server_intel",
+        "vehicle_yard",
+        "watchtower",
+        "maintenance",
+        "underground",
+        "extraction"
+      ],
+      "hazard": { "id": "alarm_lighting", "breachFx": true },
+      "weather": ["clear", "overcast"]
+    },
+    {
+      "id": "map_crimson_alley",
+      "name": "Crimson Alley",
+      "biome": "urban",
+      "modes": ["tdm", "dom", "snd", "strikeout"],
+      "scale": ["6v6"],
+      "status": "future"
+    },
+    {
+      "id": "map_skyforge",
+      "name": "Skyforge Outpost",
+      "biome": "high-elevation",
+      "modes": ["tdm", "dom", "control_grid"],
+      "scale": ["6v6"],
+      "status": "future"
+    },
+    {
+      "id": "map_obsidian_reef",
+      "name": "Obsidian Reef",
+      "biome": "coastal-industrial",
+      "modes": ["recon_protocol"],
+      "scale": ["pvevp"],
+      "status": "future"
+    },
+    {
+      "id": "map_sector9",
+      "name": "Sector 9",
+      "biome": "classified-campus",
+      "modes": ["recon_protocol"],
+      "scale": ["pvevp"],
+      "status": "future"
+    },
+    {
+      "id": "map_eclipse",
+      "name": "Eclipse Zone",
+      "biome": "br-hybrid",
+      "modes": ["eclipse_br"],
+      "biomes": [
+        "ashen_plains",
+        "crystal_wastes",
+        "titan_ridge",
+        "neon_ruins",
+        "verdant_sink",
+        "rift_core"
+      ],
+      "status": "future"
+    }
+  ],
+  "retiredConceptNames": [
+    "Black Harbor",
+    "Ironroot",
+    "Solstice",
+    "Kiln",
+    "Afterlight",
+    "Whiteveil",
+    "Sprawl",
+    "Ridgeback"
+  ]
+}

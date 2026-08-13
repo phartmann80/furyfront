@@ -1,0 +1,25 @@
+{
+  "version": "1.1.0",
+  "friendly": {
+    "id": "faction_fury_front",
+    "name": "Fury Front",
+    "tag": "FF"
+  },
+  "enemy": {
+    "id": "faction_shadowbreakers",
+    "name": "Shadowbreakers",
+    "tag": "SB",
+    "identity": "elite-infiltrators",
+    "not": ["zombie", "undead", "monster"],
+    "tools": [
+      "stealth",
+      "dimensional_breach",
+      "electronic_warfare",
+      "drones",
+      "hacking",
+      "sabotage",
+      "tactical_weapons",
+      "squad_tactics"
+    ]
+  }
+}

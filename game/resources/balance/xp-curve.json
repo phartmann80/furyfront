@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "maxLevel": 125,
+  "prestigeMax": 10,
+  "prestigeXpPerTier": 0.02,
+  "match": {
+    "kill": 100,
+    "assist": 50,
+    "headshot": 10,
+    "win": 2500,
+    "loss": 1200,
+    "draw": 1600
+  },
+  "formula": {
+    "base": 1200,
+    "linear": 180,
+    "milestoneEvery": 10,
+    "milestone": 800,
+    "pow": 1.35,
+    "powScale": 12
+  }
+}

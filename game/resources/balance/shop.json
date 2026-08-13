@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "currencies": ["credits", "fury_coins"],
+  "iap": [
+    { "sku": "coins_500", "coins": 500, "usd": 4.99 },
+    { "sku": "coins_1100", "coins": 1100, "usd": 9.99 },
+    { "sku": "coins_2400", "coins": 2400, "usd": 19.99 },
+    { "sku": "coins_5000", "coins": 5000, "usd": 39.99 },
+    { "sku": "coins_13500", "coins": 13500, "usd": 99.99 }
+  ],
+  "firstPurchaseBonus": 0.1,
+  "battlePassPriceCoins": 1000,
+  "battlePassCoinReturn": 300,
+  "weaponSkipCredits": { "base": 200, "perLevel": 40 },
+  "xpBoost": [
+    { "id": "boost_1h", "hours": 1, "mult": 1.25, "credits": 800 },
+    { "id": "boost_24h", "hours": 24, "mult": 1.25, "coins": 400 }
+  ],
+  "crate": {
+    "id": "cosmetic_crate",
+    "keyCredits": 800,
+    "keyCoins": 200,
+    "pityLegendary": 30,
+    "duplicateCredits": { "standard": 100, "rare": 200, "epic": 300, "legendary": 400 },
+    "odds": { "standard": 0.55, "rare": 0.28, "epic": 0.14, "legendary": 0.03 },
+    "directPurchaseRequiredRegions": ["BE", "NL"]
+  },
+  "bundles": [
+    { "id": "bundle_starter", "usd": 9.99, "coins": 1100, "items": ["skin_kf16_epic_starter"] },
+    { "id": "bundle_neon", "coins": 2400, "items": ["op_nyx_neon", "skin_wasp_neon", "charm_circuit"] },
+    { "id": "bundle_whiteveil", "coins": 1800, "items": ["op_sable_arctic", "skin_longmere_ice"] }
+  ],
+  "rationTokenCredits": 500,
+  "fairness": {
+    "noPowerIap": true,
+    "rationTokenRanked": false,
+    "attachmentsNotInCrates": true
+  }
+}

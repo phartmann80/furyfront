@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "lethal": [
+    { "id": "leth_frag", "name": "Frag", "fuseS": 1.8, "innerM": 4.5, "outerM": 8, "dmgInner": 90, "dmgOuter": 20, "cookable": true },
+    { "id": "leth_semtex", "name": "Stick Charge", "fuseS": 1.4, "innerM": 3.5, "outerM": 6.5, "dmgInner": 95, "dmgOuter": 25, "sticks": true },
+    { "id": "leth_thermite", "name": "Thermite", "fuseS": 0, "innerM": 2.2, "outerM": 2.2, "dmgPerS": 8, "durationS": 6.5 },
+    { "id": "leth_throwing", "name": "Throwing Knife", "dmgChest": 100, "dmgLimb": 80, "projectile": true }
+  ],
+  "tactical": [
+    { "id": "tac_smoke", "name": "Smoke", "durationS": 9.5, "radiusM": 6.5, "blocksHeartbeat": true },
+    { "id": "tac_flash", "name": "Flashbang", "durationS": 4.5, "glanceS": 0.6, "radiusM": 7 },
+    { "id": "tac_stun", "name": "Stun", "durationS": 2.2, "radiusM": 6, "move": 0.4, "turn": 0.5 },
+    { "id": "tac_tear", "name": "Tear Gas", "durationS": 7, "radiusM": 5.5, "dmgPerS": 4, "dmgCap": 20, "bloom": 1.3 },
+    { "id": "tac_emp", "name": "EMP Grenade", "durationS": 4, "radiusM": 8 }
+  ],
+  "field": [
+    { "id": "fld_shield", "name": "Deployable Shield", "chargeS": 45, "hp": 200, "lifeS": 25, "size": [2.0, 1.2] },
+    { "id": "fld_stim", "name": "Field Stim", "chargeS": 35, "heal": 18, "healS": 2.5, "clearStun": 0.5 },
+    { "id": "fld_trophy", "name": "Trophy Lite", "chargeS": 50, "eats": 2, "radiusM": 3.5, "lifeS": 20 },
+    { "id": "fld_recon", "name": "Recon Drone", "chargeS": 60, "flyS": 12 },
+    { "id": "fld_ammo", "name": "Ammo Box", "chargeS": 40, "uses": 4, "lifeS": 20 }
+  ],
+  "shopRationToken": {
+    "id": "token_ration",
+    "ranked": false,
+    "effect": "precharge_fld_stim"
+  }
+}

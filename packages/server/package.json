@@ -1,0 +1,12 @@
+{
+  "name": "@furyfront/server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts"
+  },
+  "dependencies": {
+    "@furyfront/shared": "*"
+  }
+}

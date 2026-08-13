@@ -1,0 +1,26 @@
+{
+  "version": "1.1.0",
+  "modes": [
+    {
+      "id": "shadow_assault",
+      "name": "Shadow Assault",
+      "family": "base_defense",
+      "signature": true,
+      "v01": true,
+      "players": [1, 4],
+      "enemy": "faction_shadowbreakers"
+    },
+    { "id": "strikeout", "name": "Strikeout", "players": [10], "status": "future" },
+    { "id": "control_grid", "name": "Control Grid", "status": "future" },
+    { "id": "data_harvest", "name": "Data Harvest", "status": "future" },
+    { "id": "tdm", "name": "Team Deathmatch", "score6": 75, "score10": 100, "timeS": 600, "status": "future" },
+    { "id": "snd", "name": "Search & Destroy", "firstTo": 4, "status": "future" },
+    { "id": "dom", "name": "Domination", "score6": 200, "status": "future" },
+    { "id": "ffa", "name": "Free-for-All", "players": 12, "status": "future" },
+    { "id": "ctf", "name": "Capture the Flag", "status": "future" },
+    { "id": "recon_protocol", "name": "DMZ: Recon Protocol", "maps": ["map_obsidian_reef", "map_sector9"], "status": "future" },
+    { "id": "eclipse_br", "name": "Battle Royale", "map": "map_eclipse", "status": "future" },
+    { "id": "ranked", "name": "Ranked", "rotation": ["strikeout", "tdm", "dom", "snd"], "status": "future" }
+  ],
+  "removed": ["horde", "zombie_horde"]
+}

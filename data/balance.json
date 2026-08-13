@@ -1,0 +1,23 @@
+{
+  "version": "1.1.0",
+  "id": "BALANCE_TARGET_V0",
+  "notes": "Prototype guardrail. Playtests may change TTK. CI still rejects one-frame lethal ARs (ttkMs < 50) and inverted curves.",
+  "healthBase": 100,
+  "armor": {
+    "modeScoped": true,
+    "prototypePlates": 25,
+    "absorbRatio": 1.0,
+    "doNotShareAcrossModes": true
+  },
+  "ttkBandMs": {
+    "arMin": 180,
+    "arMax": 320,
+    "smgMin": 140,
+    "smgMax": 330,
+    "lmgMin": 180,
+    "lmgMax": 340,
+    "oneFrameLethalMs": 50
+  },
+  "rpmBounds": { "min": 20, "max": 1400 },
+  "rewindMs": { "ranked": 120, "casual": 180 }
+}

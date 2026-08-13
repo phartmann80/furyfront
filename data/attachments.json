@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "slots": ["optic", "muzzle", "barrel", "underbarrel", "magazine", "stock", "laser", "ammo"],
+  "caps": {
+    "adsTime": -0.18,
+    "recoil": -0.28,
+    "magBonusArSmg": 20,
+    "magBonusLmg": 30,
+    "damage": 0,
+    "moveMax": 0.06,
+    "moveMin": -0.12
+  },
+  "attachments": [
+    { "id": "opt_reflex", "slot": "optic", "name": "Reflex", "zoom": 1.15, "ads": -0.04 },
+    { "id": "opt_holo", "slot": "optic", "name": "Holo", "zoom": 1.3, "ads": 0.02 },
+    { "id": "opt_3x", "slot": "optic", "name": "3x VLK", "zoom": 3.0, "ads": 0.08, "glint": 0.3 },
+    { "id": "opt_4x", "slot": "optic", "name": "4x Combat", "zoom": 4.0, "ads": 0.12, "glint": 0.5 },
+    { "id": "opt_6x", "slot": "optic", "name": "6x Variable", "zoom": 6.0, "ads": 0.16, "glint": 0.8, "classes": ["sniper", "lmg"] },
+    { "id": "muz_comp", "slot": "muzzle", "name": "Compensator", "recoilYaw": -0.12, "recoilPitch": -0.06 },
+    { "id": "muz_brake", "slot": "muzzle", "name": "Muzzle Brake", "recoilPitch": -0.14, "recoilYaw": -0.04 },
+    { "id": "muz_supp", "slot": "muzzle", "name": "Suppressor", "suppress": true, "range": -0.08, "ads": 0.04 },
+    { "id": "bar_long", "slot": "barrel", "name": "Long Barrel", "range": 0.12, "ads": 0.06, "move": -0.03 },
+    { "id": "bar_short", "slot": "barrel", "name": "Short Barrel", "ads": -0.08, "range": -0.1, "move": 0.03, "bloomHip": -0.1 },
+    { "id": "ub_fore", "slot": "underbarrel", "name": "Foregrip", "recoilYaw": -0.1, "ads": 0.03 },
+    { "id": "ub_merc", "slot": "underbarrel", "name": "Merc Grip", "recoil": -0.08, "hip": -0.12 },
+    { "id": "ub_launcher", "slot": "underbarrel", "name": "40mm", "lethal": "mini_he", "ads": 0.1 },
+    { "id": "mag_ext", "slot": "magazine", "name": "Extended Mag", "mag": 10, "reload": 0.12, "ads": 0.04 },
+    { "id": "mag_fast", "slot": "magazine", "name": "Fast Mag", "reload": -0.18, "mag": -4 },
+    { "id": "stk_heavy", "slot": "stock", "name": "Heavy Stock", "recoil": -0.1, "ads": 0.05, "move": -0.04 },
+    { "id": "stk_no", "slot": "stock", "name": "No Stock", "ads": -0.1, "recoil": 0.12, "move": 0.05 },
+    { "id": "las_5mw", "slot": "laser", "name": "5mW Laser", "hip": -0.18, "visible": true },
+    { "id": "ammo_fmj", "slot": "ammo", "name": "FMJ", "wall": 0.15 },
+    { "id": "ammo_sub", "slot": "ammo", "name": "Subsonic", "suppress": true, "range": -0.12 },
+    { "id": "ammo_hollow", "slot": "ammo", "name": "Hollow", "limb": 1.0, "headOverride": 1.25 },
+    { "id": "ammo_inc", "slot": "ammo", "name": "Incendiary", "dotDmgPerS": 2, "dotS": 1.5, "mag": -0.08 }
+  ]
+}

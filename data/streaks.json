@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "scoreFrom": { "kill": 100, "assist": 50, "objective": [75, 150], "streakStep": 25 },
+  "hardline": { "cost": 0.9, "keepOnDeath": 0.25, "unlockLevel": 26 },
+  "costScale20v20": 1.15,
+  "streaks": [
+    { "id": "str_uav", "name": "UAV", "cost": 500, "durationS": 12, "sweepS": 4 },
+    { "id": "str_cuav", "name": "Counter-UAV", "cost": 650, "durationS": 12 },
+    { "id": "str_airstrike", "name": "Airstrike", "cost": 900, "bombs": 3, "lethalM": 6, "whistleS": 1.4 },
+    { "id": "str_sentry", "name": "Sentry Turret", "cost": 1000, "durationS": 40, "dmg": 28, "rpm": 500, "hp": 400, "coneDeg": 45 },
+    { "id": "str_supply", "name": "Supply Drop", "cost": 1100, "stealable": true },
+    { "id": "str_drones", "name": "Drone Swarm", "cost": 1300, "durationS": 8, "count": 6, "dmg": 18, "droneHp": 40 },
+    { "id": "str_jug", "name": "Juggernaut Armor", "cost": 1600, "durationS": 25, "absorb": 250, "move": 0.8 }
+  ]
+}

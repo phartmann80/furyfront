@@ -1,0 +1,29 @@
+{
+  "version": "1.1.0",
+  "id": "mission_broken_perimeter",
+  "name": "Operation: Broken Perimeter",
+  "modeId": "shadow_assault",
+  "mapId": "map_ironfall",
+  "operatorId": "op_vex",
+  "playerWeapons": ["ar_kf16", "smg_wasp", "pis_k5", "ml_knife"],
+  "squadSize": 4,
+  "cinematicS": 22,
+  "restoreHoldS": 3.5,
+  "integrityStart": 100,
+  "transferWin": 100,
+  "phases": [
+    "cinematic",
+    "staging",
+    "alarm",
+    "checkpoint",
+    "command",
+    "grid_down",
+    "engineer",
+    "grid_up",
+    "data_steal",
+    "extraction",
+    "commander",
+    "collapse",
+    "results"
+  ]
+}

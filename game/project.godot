@@ -1,0 +1,58 @@
+; Fury Front Vertical Slice 0.1 — Godot 4
+config_version=5
+
+[application]
+config/name="Fury Front"
+config/description="Fury Front vs Shadowbreakers — Operation: Broken Perimeter"
+config/version="0.1.0"
+run/main_scene="res://scenes/bootstrap/main.tscn"
+config/features=PackedStringArray("4.3", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+EventBus="*res://scripts/core/event_bus.gd"
+ContentCatalog="*res://scripts/core/content_catalog.gd"
+GameState="*res://scripts/core/game_state.gd"
+GraphicsProfile="*res://scripts/core/graphics_profile.gd"
+InputService="*res://scripts/input/input_service.gd"
+AudioDirector="*res://scripts/audio/audio_director.gd"
+VfxBus="*res://scripts/vfx/vfx_bus.gd"
+
+[display]
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=2
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=0
+window/vsync/vsync_mode=1
+
+[input_devices]
+pointing/emulate_touch_from_mouse=false
+
+[layer_names]
+3d_physics/layer_1="world"
+3d_physics/layer_2="player"
+3d_physics/layer_3="enemy"
+3d_physics/layer_4="head"
+3d_physics/layer_5="limb"
+3d_physics/layer_6="interact"
+3d_physics/layer_7="cover"
+
+[physics]
+3d/physics_engine="GodotPhysics3D"
+common/physics_ticks_per_second=60
+
+[rendering]
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+renderer/rendering_method.web="gl_compatibility"
+lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=1
+anti_aliasing/quality/msaa_3d=0
+environment/defaults/default_clear_color=Color(0.16, 0.18, 0.2, 1)
+textures/canvas_textures/default_texture_filter=1
+textures/vram_compression/import_etc2_astc=true
+
+[debug]
+file_logging/enable_file_logging=true

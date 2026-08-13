@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "algorithm": "glicko2",
+  "casual": {
+    "expandS": 8,
+    "mmrWindows": [50, 150, 300, 9999],
+    "partyMax": 6,
+    "mixedInput": true
+  },
+  "ranked": {
+    "partyMax": 3,
+    "mixedInput": false,
+    "pingPreferredMs": 70,
+    "pingHardMs": 110,
+    "leavePenaltiesMin": [8, 30, 120],
+    "minAccountLevel": 20
+  },
+  "regions": [
+    "na-east", "na-west", "eu-west", "eu-central",
+    "sa-east", "asia-east", "asia-se", "oceania", "me"
+  ],
+  "ranks": [
+    { "id": "bronze", "divisions": 3, "sr": 100 },
+    { "id": "silver", "divisions": 3, "sr": 100 },
+    { "id": "gold", "divisions": 3, "sr": 100 },
+    { "id": "platinum", "divisions": 3, "sr": 100 },
+    { "id": "diamond", "divisions": 3, "sr": 100 },
+    { "id": "master", "divisions": 1, "sr": 100 },
+    { "id": "fury", "divisions": 1, "sr": null }
+  ],
+  "decay": { "from": "diamond", "srPerDay": 2, "afterInactiveDays": 7 }
+}

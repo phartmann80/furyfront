@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "season": 1,
+  "weeks": 11,
+  "tiers": 100,
+  "xpPerTier": 10000,
+  "premiumCoins": 1000,
+  "coinReturn": 300,
+  "skipCoinsPerTier": 150,
+  "skipCapPerWeek": 20,
+  "bankLeftoverToNextSeason": 0.2,
+  "freeTrackEvery": 5,
+  "sampleTiers": [
+    { "tier": 1, "free": "credits_200", "premium": "skin_kf16_s1" },
+    { "tier": 5, "free": "charm_01", "premium": "op_vex_recolor" },
+    { "tier": 10, "free": "credits_400", "premium": "2xp_1h" },
+    { "tier": 20, "free": "calling_card_s1", "premium": "skin_wasp_epic" },
+    { "tier": 50, "free": "emblem_s1", "premium": "op_nyx_legendary_head" },
+    { "tier": 100, "free": "title_veteran", "premium": "skin_reactive_kf16", "premiumExtra": "coins_300" }
+  ]
+}

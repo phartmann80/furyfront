@@ -1,0 +1,12 @@
+{
+  "name": "furyfront",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "FuryFront production bible, simulation kernel, and backend samples",
+  "workspaces": ["packages/shared", "packages/server"],
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "test": "npm run validate && npm run test -w @furyfront/shared"
+  }
+}

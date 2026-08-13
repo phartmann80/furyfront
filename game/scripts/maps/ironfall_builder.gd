@@ -42,8 +42,8 @@ func _env(root: Node3D) -> void:
 	env.ambient_light_color = Color(0.38, 0.4, 0.42)
 	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = GraphicsProfile.tier != GraphicsProfile.Tier.LOW
-	env.fog_enabled = true
+	env.glow_enabled = false
+	env.fog_enabled = GraphicsProfile.tier != GraphicsProfile.Tier.LOW
 	env.fog_light_color = Color(0.22, 0.24, 0.26)
 	env.fog_density = 0.004
 	w.environment = env

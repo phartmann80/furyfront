@@ -36,15 +36,23 @@ func tracer(from: Vector3, to: Vector3) -> void:
 func impact(pos: Vector3, normal: Vector3) -> void:
 	if not GraphicsProfile.decal_enabled:
 		return
-	var d := Decal.new()
-	d.size = Vector3(0.22, 0.22, 0.22)
-	d.albedo_mix = 0.9
-	d.modulate = Color(0.15, 0.14, 0.12)
-	get_tree().current_scene.add_child(d)
-	d.global_position = pos + normal * 0.02
+	# Decal nodes are unreliable on Compatibility/web. Use a world-aligned quad.
+	var mi := MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.22, 0.22)
+	mi.mesh = quad
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.15, 0.14, 0.12, 0.9)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mi.material_override = mat
+	get_tree().current_scene.add_child(mi)
+	mi.global_position = pos + normal * 0.02
+	if normal.length_squared() > 0.001:
+		mi.look_at(pos + normal, Vector3.UP)
 	await get_tree().create_timer(8.0).timeout
-	if is_instance_valid(d):
-		d.queue_free()
+	if is_instance_valid(mi):
+		mi.queue_free()
 
 
 func explosion(pos: Vector3) -> void:

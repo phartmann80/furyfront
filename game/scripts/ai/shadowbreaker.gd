@@ -37,7 +37,8 @@ func setup(id: String, skill_name: String, points: Array[Vector3]) -> void:
 	health.died.connect(_die)
 	_agent = NavigationAgent3D.new()
 	_agent.max_speed = 4.6 * float(def.get("move", 1.0))
-	_agent.avoidance_enabled = true
+	# RVO avoidance can stall unthreaded web exports; keep path follow only in browser.
+	_agent.avoidance_enabled = not OS.has_feature("web")
 	add_child(_agent)
 	_make_body()
 	if not patrol_points.is_empty():

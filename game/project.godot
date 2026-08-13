@@ -6,7 +6,7 @@ config/name="Fury Front"
 config/description="Fury Front vs Shadowbreakers — Operation: Broken Perimeter"
 config/version="0.1.0"
 run/main_scene="res://scenes/bootstrap/main.tscn"
-config/features=PackedStringArray("4.3", "Mobile")
+config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -21,7 +21,7 @@ VfxBus="*res://scripts/vfx/vfx_bus.gd"
 [display]
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/mode=2
+window/size/mode=0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=0
@@ -44,7 +44,7 @@ pointing/emulate_touch_from_mouse=false
 common/physics_ticks_per_second=60
 
 [rendering]
-renderer/rendering_method="mobile"
+renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="mobile"
 renderer/rendering_method.web="gl_compatibility"
 lights_and_shadows/directional_shadow/size=2048
@@ -52,7 +52,8 @@ lights_and_shadows/directional_shadow/soft_shadow_filter_quality=1
 anti_aliasing/quality/msaa_3d=0
 environment/defaults/default_clear_color=Color(0.16, 0.18, 0.2, 1)
 textures/canvas_textures/default_texture_filter=1
+textures/vram_compression/import_s3tc_bptc=true
 textures/vram_compression/import_etc2_astc=true
 
 [debug]
-file_logging/enable_file_logging=true
+file_logging/enable_file_logging=false

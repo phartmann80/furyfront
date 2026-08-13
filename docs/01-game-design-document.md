@@ -22,16 +22,15 @@ Not sci-fi power armor. Not mil-sim slow. **Not zombies, undead, or monsters.**
 
 ## 3. Target platforms
 
-Priority: **Android native → iOS native → desktop → web (capability-selected).**
+Priority: **PC web → desktop packaging → Android packaged/wrapped → iOS packaged/wrapped.**
 
 | Tier | Hardware | Target | Notes |
 | --- | --- | --- | --- |
-| Ultra | Flagship native / high desktop | 60–120 optional | Highest shadows, particles, detail |
-| High | Modern Android / iOS | 60 FPS | Reduced shadow cost, dynamic resolution |
-| Medium | Mid-range mobile | 60 where sustainable | Baked/cheaper lighting, aggressive LOD |
-| Low | Minimum supported | 30–60 adaptive | Minimal realtime shadows, simplified post |
+| High | Gaming PC browser | 60 FPS at 1080p | Full shadows/particles, native 3D scale |
+| Medium | Typical PC browser (default web) | 60 FPS | Reduced particles, 0.85 3D scale |
+| Low | Constrained GPU / integrated | 60 if possible | No shadows, 0.7 3D scale, fewer decals |
 
-120 FPS is **not** the baseline. WebGPU is **not** assumed. Web uses a Compatibility fallback when required. Android architecture is never compromised for browser parity.
+120 FPS is **not** the baseline. WebGPU is **not** assumed. Production web uses Compatibility (`gl_compatibility`). Mobile native/wrapper comes after Web V0.1 is stable.
 
 ## 4. Combat model
 
@@ -101,6 +100,7 @@ Mature combat. No sexual content. No real-world national armies as named faction
 | `06-game-modes.md` | Modes including Shadow Assault |
 | `09-economy.md` | No P2W; shop not in V0.1 |
 | `10-multiplayer-architecture.md` | Future authority model |
-| `11-technical-architecture.md` | Godot 4 / Android |
+| `11-technical-architecture.md` | Godot 4 / PC web first |
 | `17-vertical-slice-01.md` | Broken Perimeter beat sheet |
 | `18-content-packs.md` | Installed vs future PCK |
+| `20-web-hosting.md` | Wasm MIME, headers, unthreaded export |

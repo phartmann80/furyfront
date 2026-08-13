@@ -1,7 +1,7 @@
 # Vertical Slice 0.1 — Operation: Broken Perimeter
 
-**Platform:** Android first (editor keyboard allowed for development).  
-**Map:** Ironfall Depot graybox (`game/scenes/maps/ironfall_depot.tscn`).  
+**Platform:** PC web first (Godot web export). Touch HUD kept for later mobile clients.  
+**Map:** Ironfall Depot graybox (procedural `ironfall_builder.gd`).  
 **Operator:** Vex (Assault).  
 **Enemy:** Shadowbreakers — Phantom, Hacker, Enforcer, then elite commander.
 
@@ -36,7 +36,7 @@
 
 `move_*`, `look` (mouse), `fire`, `ads`, `reload`, `sprint`, `crouch`, `jump`, `weapon_next`, `grenade`, `tactical`, `interact`, `debug_reset`
 
-Touch HUD duplicates all of these. Keyboard is not the architecture — `InputService` is.
+PC keyboard/mouse is the V0.1 usability benchmark. Touch HUD duplicates these actions and stays in the project for Android/iOS later. `InputService` is the abstraction.
 
 ## What V0.1 is not
 

@@ -13,8 +13,7 @@ var _touch_look_sens := 0.18
 
 func _ready() -> void:
 	_bind()
-	if not OS.has_feature("mobile"):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Web requires a user click before pointer lock. Capture happens from Start Operation.
 
 
 func _bind() -> void:
@@ -34,6 +33,7 @@ func _bind() -> void:
 	_key("interact", KEY_E)
 	_key("debug_reset", KEY_F9)
 	_key("ui_cancel", KEY_ESCAPE)
+	_key("ui_accept", KEY_ENTER)
 
 
 func move_vector() -> Vector2:
@@ -77,6 +77,12 @@ func consume_look() -> Vector2:
 	var d := touch_look * _look_sens
 	touch_look = Vector2.ZERO
 	return d
+
+
+func capture_mouse() -> void:
+	if OS.has_feature("mobile"):
+		return
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _key(action: String, key: Key) -> void:

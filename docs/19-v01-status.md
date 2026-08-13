@@ -1,40 +1,48 @@
 # Vertical Slice 0.1 — engineering status
 
-Date: 2026-08-13
+Date: 2026-08-13 (updated for PC web retarget)
+
+## Platform mandate
+
+**PC web first.** Android APK milestone cancelled for this slice. One Godot gameplay project; touch/mobile input retained for future wrapped/native clients.
 
 ## What is true
 
-Godot 4.7.1 **boots** the Ironfall Depot graybox headless with Mobile renderer. Canonical JSON validates. Combat math tests pass. **An Android APK was not produced** on this machine (Android build-tools directory missing). Do not treat this as a completed phone install.
+- Godot **4.7.1.stable** exports a **Web** build (`export/web/`) with Compatibility renderer.
+- Canonical JSON validates. Godot headless combat tests pass.
+- Local preview: `node scripts/serve-web.mjs` → `http://127.0.0.1:8088/`
+- Foundation checkpoint commit: `60ceb13`. Web retarget in follow-up commit.
 
-## Report
+## Web export artifacts (release, unthreaded)
 
-1. **Godot version:** 4.7.1.stable.official.a13da4feb
-2. **Renderer:** `mobile` (project default). Web fallback `gl_compatibility`. Desktop editor may still use Mobile for Android parity.
-3. **Repository status:** Godot project under `game/`. Unity/Unreal/URP samples quarantined in `samples/_quarantine/`.
-4. **Branch:** recorded at commit time (see git).
-5. **Commit hash:** recorded at commit time.
-6. **Project structure:** `game/scripts/{core,player,combat,weapons,ai,objectives,input,audio,persistence,networking,ui,vfx,maps}` + `scenes/bootstrap` + `resources/balance` (synced JSON) + `tests` + `shaders`.
-7. **Autoloads:** EventBus, ContentCatalog, GameState, GraphicsProfile, InputService, AudioDirector, VfxBus
-8. **Input Map:** registered at runtime (`move_*`, `fire`, `ads`, `reload`, `sprint`, `crouch`, `jump`, `weapon_next`, `grenade`, `tactical`, `interact`, `debug_reset`). Touch HUD duplicates all combat buttons.
-9. **Android export status:** **Blocked.** Godot: `Unable to open Android 'build-tools' directory.` Preset exists (`game/export_presets.cfg`, `com.furyfront.game`, arm64-v8a).
-10. **Player controller:** CharacterBody3D walk/sprint/crouch/jump/vault ray/ADS/hip fire/reload/switch/grenade/tactical/interact/damage/death/debug reset.
-11. **Mobile controls:** left stick, right look zone, Fire, ADS, Reload, Sprint, Crouch, Jump, Frag, Tac, Wpn, Use. Always-on for `mobile` feature.
-12. **KF-16:** loaded from `weapons.json` via ContentCatalog. WASP-9, K5, knife on the same manager. No duplicated RPM/damage in Mono-style scripts.
-13. **Damage:** CombatMath + HealthComponent (HP 100, separate armor plates). Head/limb/falloff/RPM gate.
-14. **Shadowbreaker AI:** Phantom / Hacker / Enforcer / Commander. States patrol→suspicious→investigate→engage (cover/reposition/flank/fire/objective)→search/retreat. Vision cone + LOS + hearing. No magically known player position. Skill profiles recruit/trained/veteran/elite.
-15. **Navigation:** NavigationRegion3D + NavigationAgent3D + collider bake (deferred). Direct-seek fallback if mesh empty.
-16. **Ironfall Depot:** procedural graybox (not a production art map). Areas: gate, command, barracks, armory, comms, server, yard, watchtower, maintenance, underground ramp, extraction. **Not Black Harbor.**
-17. **Base Defense:** MissionDirector runs Operation: Broken Perimeter beats including cinematic overlay, integrity, data transfer, restore interact, extraction, commander.
-18. **HUD:** health/armor, ammo, objective, integrity, transfer, extraction lock, squad line, crosshair, hitmarker, interact prompt.
-19. **Audio/VFX:** procedural gunshot/reload/impact/explosion/alarm/radio; muzzle light, tracer, decal, smoke, explosion light, breach notify. Placeholders — provenance in `game/assets/PROVENANCE.md`.
-20. **Tests:** `node scripts/validate.mjs` OK. `godot --headless --script res://tests/run_tests.gd` OK (KF-16 10 m damage, head, armor, RPM).
-21. **APK result:** not built.
-22. **APK size:** n/a
-23. **FPS / frame time on device:** n/a (no APK). Headless boot on the editor PC succeeded (~3 s quit-after, Mobile renderer).
-24. **Memory on device:** n/a
-25. **Blockers:** Android SDK build-tools + debug keystore + export templates; real operator/weapon meshes; navmesh quality; dedicated server not started (intentionally).
-26. **Canonical migration:** `data/*.json` → `scripts/sync-godot-data.mjs` → `game/resources/balance/*.json` → ContentCatalog. Factions locked. Zombie Horde removed. Maps replaced with Ironfall / Crimson Alley / Skyforge / Obsidian Reef / Sector 9 / Eclipse Zone.
+| File | Raw size |
+| --- | ---: |
+| `index.wasm` | 39.5 MB |
+| `index.pck` | 122 KB |
+| `index.js` | 273 KB |
+| `index.html` + worklets + icons | ~55 KB |
+| **Total on disk** | **~40.0 MB** |
+| **gzip (wasm+js+pck+html+worklets)** | **~10.3 MB** |
 
-## Quarantine (not deleted)
+Initial download is **not** multi-gigabyte. PCK is tiny because V0.1 is procedural graybox + JSON + compiled scripts.
 
-`samples/_quarantine/unity`, `shaders` (URP), `unreal`.
+## Browser boot (Playwright smoke)
+
+- Godot boot OK, WebGL2 / GLES3 Compatibility
+- Console: `single-threaded, no GDExtension support`
+- Start menu renders (title, quality, START OPERATION)
+- **Full mission playthrough** not automated end-to-end in CI yet — use manual browser QA for pointer-lock FPS loop
+
+## Remaining before calling Web V0.1 done
+
+1. Manual playtest: start → Ironfall → WASD/mouse → KF-16 → AI → mission results
+2. FPS/memory on target gaming PC hardware
+3. HTTPS deploy (Cloudflare Pages / nginx / S3+CloudFront)
+4. Art pass (arms, KF-16, enemy silhouettes) without breaking 60 FPS budget
+
+## Git
+
+- Remote: **none configured**
+- Branch: `master`
+- Foundation: `60ceb13`
+- Web retarget: see latest commit after this doc update

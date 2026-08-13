@@ -11,6 +11,7 @@ var extract: Label
 var interact: Label
 var cross: ColorRect
 var hit: ColorRect
+var fps: Label
 
 func _ready() -> void:
 	layer = 10
@@ -49,6 +50,12 @@ func _build() -> void:
 	hit.color = Color(1, 1, 1, 0)
 	add_child(hit)
 	_lab(Vector2(32, 140), "SQUAD  VEX · FF-02 · FF-03 · FF-04")
+	fps = _lab(Vector2(1720, 40), "FPS --")
+
+
+func _process(_delta: float) -> void:
+	if fps:
+		fps.text = "FPS %d" % int(Engine.get_frames_per_second())
 
 
 func _lab(pos: Vector2, text: String) -> Label:

@@ -1,56 +1,55 @@
 extends Node
 
-enum Tier { ULTRA, HIGH, MEDIUM, LOW }
+enum Tier { HIGH, MEDIUM, LOW }
 
-var tier: Tier = Tier.HIGH
+var tier: Tier = Tier.MEDIUM
 var particle_scale: float = 1.0
 var shadow_enabled: bool = true
 var decal_enabled: bool = true
+var scaling_3d: float = 1.0
 
 func _ready() -> void:
-	_detect()
+	if OS.has_feature("web"):
+		tier = Tier.MEDIUM
+	elif OS.has_feature("mobile"):
+		tier = Tier.LOW
+	else:
+		tier = Tier.HIGH
 	apply()
 
 
-func _detect() -> void:
-	if OS.has_feature("web"):
-		tier = Tier.MEDIUM
-		return
-	if OS.has_feature("mobile"):
-		var info: Dictionary = OS.get_memory_info()
-		var ram_mb: float = float(info.get("physical", 0)) / (1024.0 * 1024.0)
-		if ram_mb >= 8000:
+func set_named(name: String) -> void:
+	match name:
+		"high":
 			tier = Tier.HIGH
-		elif ram_mb >= 4000:
-			tier = Tier.MEDIUM
-		else:
+		"low":
 			tier = Tier.LOW
-	else:
-		tier = Tier.HIGH
-	if DisplayServer.screen_get_refresh_rate() >= 110.0 and not OS.has_feature("mobile"):
-		tier = Tier.ULTRA
+		_:
+			tier = Tier.MEDIUM
+	apply()
 
 
 func apply() -> void:
 	match tier:
-		Tier.ULTRA:
-			particle_scale = 1.25
-			shadow_enabled = true
-			decal_enabled = true
-			Engine.max_fps = 0
 		Tier.HIGH:
 			particle_scale = 1.0
 			shadow_enabled = true
 			decal_enabled = true
+			scaling_3d = 1.0
 			Engine.max_fps = 60
 		Tier.MEDIUM:
 			particle_scale = 0.65
 			shadow_enabled = true
 			decal_enabled = true
+			scaling_3d = 0.85
 			Engine.max_fps = 60
 		Tier.LOW:
 			particle_scale = 0.35
 			shadow_enabled = false
 			decal_enabled = false
-			Engine.max_fps = 30
-	print("GraphicsProfile tier=", tier, " fps_cap=", Engine.max_fps)
+			scaling_3d = 0.7
+			Engine.max_fps = 60
+	var vp := get_viewport()
+	if vp:
+		vp.scaling_3d_scale = scaling_3d
+	print("GraphicsProfile tier=", tier, " scale=", scaling_3d, " web=", OS.has_feature("web"))

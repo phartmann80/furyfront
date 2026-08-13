@@ -2,61 +2,64 @@
 
 ## 1. Decision: Godot 4 is the game runtime
 
-Unity 6, Unreal, Unity Addressables, Unity Mobile Export, Unreal packaging, and Capacitor/Cordova combat wrappers are **rejected**.
+Unity 6, Unreal, Unity Addressables, Unity Mobile Export, Unreal packaging, and Capacitor/Cordova/React/Three.js combat wrappers are **rejected**.
 
 | Option | Verdict |
 | --- | --- |
-| Godot 4.x native Android (Mobile / Vulkan) | **Primary.** V0.1 target. |
-| Godot iOS export | Priority 2 |
-| Godot desktop | Editor + playtest |
-| Godot web (Compatibility renderer) | Secondary, capability-selected |
+| Godot 4.x web (Compatibility / GLES3) | **Primary.** V0.1 target. |
+| Godot desktop | Later packaging if useful |
+| Godot native Android / iOS | Fallback after a web-wrapper spike |
+| Web wrapper (WebView hosting the same export) | Spike after Web V0.1 — do not implement now |
 | Capacitor / Cordova / React combat client | Forbidden for the FPS loop |
 | Unity 6 URP | Quarantined (`samples/_quarantine`) |
 | Unreal Pixel Streaming | Rejected as web combat client |
 
 ### Export order
 
-1. Android APK  
-2. iOS  
-3. Desktop  
-4. Web where technically appropriate  
+1. PC Web  
+2. Desktop  
+3. Android (wrapper or native — decide after spike)  
+4. iOS (same)  
 
-Do not let web memory/shader limits shrink Android quality.
+One Godot gameplay project. Do not fork a second combat codebase for mobile.
 
 ## 2. Graphics capability tiers
 
-Applied at boot from device class (RAM, GPU, refresh). Override in debug.
+Applied at boot (web defaults Medium). Player can pick High / Medium / Low on the start screen.
 
-| Tier | Shadows | Particles | Reflections | Res | FPS target |
-| --- | --- | --- | --- | --- | --- |
-| Ultra | High | High | SSR/probes | Native | 60, optional 120 |
-| High | Medium | Medium | Probes | Dynamic 0.85–1.0 | 60 |
-| Medium | Low / baked bias | Low | Off/cubemap | Dynamic 0.7–0.9 | 60 if sustainable |
-| Low | Off or blob | Minimal | Off | 0.6–0.75 | 30–60 adaptive |
+| Tier | Shadows | Particles | 3D scale | FPS target |
+| --- | --- | --- | --- | --- |
+| High | On | Full | 1.0 | 60 at 1080p |
+| Medium | On | Reduced | 0.85 | 60 |
+| Low | Off | Minimal | 0.7 | 60 if possible |
 
 Renderer:
 
-- Android: **Mobile** (`rendering_method.mobile`)
-- Desktop editor Ultra: **Forward+** allowed for art review; ship Android on Mobile
-- Web: **gl_compatibility** fallback; never assume WebGPU
+- Web (production): **`gl_compatibility`**
+- Android later: **Mobile** (`rendering_method.mobile`)
+- Desktop editor: Compatibility for web parity; Forward+ only for art review, not the ship path
+
+Never assume WebGPU. Decal nodes are not used (quad impacts instead). Glow is off (Compatibility cost).
 
 ## 3. Client topology (V0.1)
 
 ```
-Godot Android APK
-  InputService (touch first, kb/mouse editor)
+Godot Web (index.html + wasm + pck)
+  StartMenu (click → audio unlock + pointer lock)
+  InputService (WASD/mouse primary, touch kept)
   PlayerMotor + WeaponController
   CombatMath (from data/*.json via ContentCatalog)
   Shadowbreaker AI + NavigationRegion3D
   MissionDirector (Broken Perimeter)
-  HUD
+  HUD + ResultsScreen
 ```
 
 Online later:
 
 ```
-Client predicts move/fire  →  dedicated Godot/headless validates
-Snapshot interpolation     →  server owns HP, kills, objectives, results
+Browser client  →  WebSocket / WebRTC (evaluate before picking)
+Dedicated Godot/headless validates HP, kills, objectives
+Do not choose a transport that cannot run from the browser
 ```
 
 V0.1 is **offline**. Interfaces for `NetSession`, `HitConfirm`, `MatchState` exist as stubs so we do not paint into a corner.
@@ -76,29 +79,29 @@ Godot Scripts **must not** hardcode KF-16 damage/RPM. `packages/shared` TypeScri
 
 ## 5. Content packing (not Addressables)
 
-V0.1: everything for Ironfall + four weapons + three enemies is **installed in the APK**.
+V0.1: Ironfall + four weapons + four enemy archetypes live in the **web PCK**. Keep the first download far below the old 3–8 GB client assumption.
 
 Later production:
 
 | Pack | Delivery |
 | --- | --- |
-| Core | Installed |
+| Core wasm + boot PCK | Initial HTTPS download |
 | Map PCK | Streamed / DLC |
 | Operators / weapons | Cached packs |
 | Audio / cinematics | Optional |
 | Cosmetics / seasonal | Optional, never required to boot combat |
 
-See `docs/18-content-packs.md`.
+See `docs/18-content-packs.md` and `docs/20-web-hosting.md`.
 
-## 6. Android
+## 6. Mobile (deferred)
 
-- Landscape, immersive, touch HUD always present on `DisplayServer.is_touchscreen_available()` or `OS.has_feature("mobile")`.
-- Target API documented in `game/export_presets.cfg`.
-- 64-bit ARM. Vulkan with GLES3 Compatibility fallback only if a device fails Mobile renderer (export flavor later).
+Touch HUD and `InputService` stay. They are hidden unless `OS.has_feature("mobile")`.
+
+After Web V0.1, spike **wrapper vs native Godot export**. Do not implement the wrapper now.
 
 ## 7. Networking (after V0.1 combat)
 
-Headless Linux Godot build, 30 Hz sim, rewind window 120/180 ms, client never authors damage. Matchmaking stays in `packages/server` until the FPS loop is proven.
+Browser-compatible transport first (WebSocket at minimum). Headless Linux Godot build, 30 Hz sim, rewind window 120/180 ms, client never authors damage. Matchmaking stays in `packages/server` until the FPS loop is proven.
 
 Simulated latency tests (30 / 80 / 150 ms, loss, jitter) are a **gate for calling netcode done**, not a V0.1 deliverable.
 

@@ -1,12 +1,24 @@
 extends Node
+## Fury Front bootstrap: start screen then Ironfall Depot mission.
 
 const PlayerFactoryScript = preload("res://scripts/player/player_factory.gd")
 const IronfallBuilderScript = preload("res://scripts/maps/ironfall_builder.gd")
 
 var world: Node3D
 var cinematic: Label
+var _started := false
 
 func _ready() -> void:
+	var menu := preload("res://scripts/ui/start_menu.gd").new()
+	add_child(menu)
+	menu.started.connect(_begin_operation)
+
+
+func _begin_operation() -> void:
+	if _started:
+		return
+	_started = true
+	InputService.capture_mouse()
 	world = Node3D.new()
 	world.name = "IronfallDepot"
 	add_child(world)
@@ -19,16 +31,14 @@ func _ready() -> void:
 	add_child(hud)
 	var touch := TouchControls.new()
 	add_child(touch)
-	if OS.has_feature("mobile"):
-		touch.visible = true
-	else:
-		touch.visible = true # layout present for device testing; mouse still works
+	touch.visible = OS.has_feature("mobile")
 	var mission := MissionDirector.new()
 	add_child(mission)
 	_cinematic_overlay()
 	mission.start(world, builder.markers)
+	EventBus.mission_ended.connect(_on_mission_ended)
 	AudioDirector.radio("FURY FRONT ACTUAL: Ironfall, hold the depot.")
-	print("Fury Front V0.1 boot  renderer=", ProjectSettings.get_setting("rendering/renderer/rendering_method"))
+	print("Fury Front Web V0.1 boot renderer=", ProjectSettings.get_setting("rendering/renderer/rendering_method.web"))
 
 
 func _allies(origin: Vector3) -> void:
@@ -50,15 +60,24 @@ func _cinematic_overlay() -> void:
 
 
 func _cine_seq() -> void:
-	var lines := [
+	var lines := PackedStringArray([
 		"IRONFALL DEPOT — 04:12 LOCAL",
 		"Routine patrol. Comms check.",
 		"Interference detected…",
 		"Cameras offline. Perimeter sensors dark.",
 		"SHADOWBREAKER BREACH",
 		"ALARM. All Fury Front elements — defend the command center.",
-	]
+	])
 	for line in lines:
+		if cinematic == null:
+			return
 		cinematic.text = line
-		await get_tree().create_timer(3.4).timeout
-	cinematic.visible = false
+		await get_tree().create_timer(2.2).timeout
+	if cinematic:
+		cinematic.visible = false
+
+
+func _on_mission_ended(ok: bool) -> void:
+	var rs := ResultsScreen.new()
+	add_child(rs)
+	rs.show_results(ok)

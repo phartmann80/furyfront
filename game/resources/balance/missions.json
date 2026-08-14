@@ -7,7 +7,7 @@
   "operatorId": "op_vex",
   "playerWeapons": ["ar_kf16", "smg_wasp", "pis_k5", "ml_knife"],
   "squadSize": 4,
-  "cinematicS": 22,
+  "cinematicS": 14,
   "restoreHoldS": 3.5,
   "integrityStart": 100,
   "transferWin": 100,

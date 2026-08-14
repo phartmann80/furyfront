@@ -15,8 +15,6 @@ func fire(w: Dictionary, origin: Vector3, dir: Vector3, _muzzle: Vector3) -> voi
 		return
 	var pos: Vector3 = hit.position as Vector3
 	VfxBus.tracer(origin, pos)
-	VfxBus.impact(pos, hit.normal)
-	AudioDirector.impact(pos)
 	var collider: Object = hit.collider
 	var hitbox := "chest"
 	if collider is Area3D:
@@ -25,6 +23,9 @@ func fire(w: Dictionary, origin: Vector3, dir: Vector3, _muzzle: Vector3) -> voi
 		elif collider.is_in_group("hit_limb"):
 			hitbox = "limb"
 		collider = collider.get_parent()
+	var flesh := collider != null and collider.has_method("receive_hit")
+	VfxBus.impact(pos, hit.normal, flesh)
+	AudioDirector.impact(pos)
 	var range_m := origin.distance_to(pos)
 	var result := CombatMath.apply_hit(w, range_m, hitbox, 0.0)
 	if collider and collider.has_method("receive_hit"):

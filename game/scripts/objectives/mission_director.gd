@@ -8,6 +8,8 @@ var restored := false
 var map: Dictionary = {}
 var _spawns: Node
 var _elapsed := 0.0
+var _extract_s := 0.0
+var _alarmed := false
 
 func start(world: Node, markers: Dictionary) -> void:
 	map = markers
@@ -15,7 +17,7 @@ func start(world: Node, markers: Dictionary) -> void:
 	integrity = 100.0
 	transfer = 0.0
 	_set_phase("cinematic")
-	EventBus.alarm_started.connect(_on_alarm)
+	EventBus.enemy_killed.connect(_on_kill)
 	var restore := world.get_node_or_null("RestoreStation")
 	if restore:
 		restore.used.connect(_on_restored)
@@ -23,58 +25,66 @@ func start(world: Node, markers: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_elapsed += delta
+	GameState.mission_clock += delta
 	match phase:
 		"cinematic":
-			if _elapsed > float(ContentCatalog.mission.get("cinematicS", 22)):
+			if _elapsed > float(ContentCatalog.mission.get("cinematicS", 14)):
 				_set_phase("staging")
 		"staging":
 			if _elapsed > 2.0:
 				_set_phase("alarm")
 		"alarm":
-			AudioDirector.alarm()
-			AudioDirector.radio("FURY FRONT: BREACH AT THE GATE.")
+			if not _alarmed:
+				_alarmed = true
+				AudioDirector.alarm()
+				EventBus.alarm_started.emit()
+				AudioDirector.radio("FURY FRONT: BREACH AT THE GATE. HOLD IRONFALL.")
 			_set_phase("checkpoint")
 			_wave(["sb_phantom", "sb_phantom"], "gate", "recruit")
 		"checkpoint":
-			integrity -= 1.2 * delta
-			if _enemies() <= 0 or _elapsed > 25.0:
+			integrity -= 0.28 * delta
+			if _enemies() <= 0 or _elapsed > 42.0:
 				_set_phase("command")
 				_wave(["sb_phantom", "sb_phantom", "sb_enforcer"], "command", "trained")
 		"command":
-			integrity -= 2.0 * delta
-			if _elapsed > 12.0:
+			integrity -= 0.42 * delta
+			if _enemies() <= 0 or _elapsed > 38.0:
 				_set_phase("grid_down")
 		"grid_down":
-			integrity -= 3.5 * delta
-			EventBus.notify.emit("SECURITY GRID DISABLED")
-			if _elapsed > 4.0:
+			integrity -= 0.9 * delta
+			if _elapsed > 2.5:
 				_set_phase("engineer")
 		"engineer":
-			integrity -= 1.5 * delta
+			integrity -= 0.38 * delta
 			if restored:
 				_set_phase("grid_up")
 		"grid_up":
-			integrity = minf(100.0, integrity + 4.0 * delta)
-			if _elapsed > 4.0:
+			integrity = minf(100.0, integrity + 8.0 * delta)
+			if _elapsed > 2.5:
 				_set_phase("data_steal")
 				_wave(["sb_hacker", "sb_hacker", "sb_phantom"], "server", "trained")
 		"data_steal":
 			if _hackers_alive():
-				transfer += 4.0 * delta
+				transfer += 1.15 * delta
 			if transfer >= 100.0:
 				_fail()
-			elif _enemies() <= 0 or _elapsed > 28.0:
+			elif not _hackers_alive() and _elapsed > 1.5:
 				_set_phase("extraction")
+				_extract_s = 55.0
 				_wave(["sb_enforcer", "sb_phantom", "sb_hacker"], "extraction", "veteran")
 		"extraction":
-			if _elapsed > 20.0 or _enemies() <= 1:
+			_extract_s = maxf(0.0, _extract_s - delta)
+			EventBus.extraction_changed.emit(_extract_s)
+			if _enemies() <= 1:
 				_set_phase("commander")
 				_wave(["sb_commander", "sb_enforcer"], "extraction", "elite")
+			elif _extract_s <= 0.0:
+				_fail()
 		"commander":
-			if _enemies() <= 0:
+			if _enemies() <= 0 or _elapsed > 50.0:
 				_set_phase("collapse")
 		"collapse":
-			if _elapsed > 3.0:
+			if _elapsed > 2.5:
 				_win()
 	integrity = clampf(integrity, 0.0, 100.0)
 	transfer = clampf(transfer, 0.0, 100.0)
@@ -90,20 +100,79 @@ func _set_phase(p: String) -> void:
 	EventBus.mission_phase.emit(p)
 	var labels := {
 		"cinematic": "IRONFALL DEPOT — STAND BY",
-		"staging": "MOVE TO STAGING",
+		"staging": "MOVE TO STAGING — LOAD KF-16",
 		"alarm": "SECURITY BREACH",
 		"checkpoint": "DEFEND THE GATE",
-		"command": "COMMAND CENTER — DEFEND",
+		"command": "DEFEND THE COMMAND CENTER",
 		"grid_down": "GRID DOWN — REACH COMMS",
-		"engineer": "RESTORE SECURITY SYSTEM",
+		"engineer": "HOLD [E] — RESTORE SECURITY GRID",
 		"grid_up": "GRID RESTORED",
-		"data_steal": "STOP DATA THEFT — SERVER ROOM",
-		"extraction": "INTERCEPT EXTRACTION LZ",
+		"data_steal": "STOP THE SIGNAL HACKER — SERVER ROOM",
+		"extraction": "INTERCEPT EXTRACTION TEAM",
 		"commander": "ELIMINATE SHADOWBREAKER COMMANDER",
 		"collapse": "AREA SECURE",
 		"results": "MISSION COMPLETE",
 	}
+	var briefs := {
+		"cinematic": "Fury Front holds Ironfall Depot. Shadowbreakers want the intel.",
+		"staging": "You are the reaction element. Command center is the heart of the base.",
+		"alarm": "Perimeter is compromised. If the gate falls, they reach command.",
+		"checkpoint": "Stop the first wave at the security gate.",
+		"command": "Do not let them occupy the command floor.",
+		"grid_down": "Cameras and locks are down. Integrity is bleeding.",
+		"engineer": "Restore the grid at Comms or the base stays blind.",
+		"grid_up": "Sensors back online. They will go for the server next.",
+		"data_steal": "Hackers are stealing classified traffic. Kill them or we lose the data.",
+		"extraction": "Stop the steal team at the LZ before they leave with the packet.",
+		"commander": "Their commander is covering the extract. Drop him.",
+		"collapse": "Ironfall holds.",
+		"results": "",
+	}
 	EventBus.objective_changed.emit(str(labels.get(p, p)))
+	EventBus.briefing_changed.emit(str(briefs.get(p, "")))
+	_sync_objective(p)
+	_radio_for(p)
+
+
+func _sync_objective(p: String) -> void:
+	var keys := {
+		"checkpoint": "gate",
+		"alarm": "gate",
+		"command": "command",
+		"grid_down": "comms",
+		"engineer": "comms",
+		"grid_up": "server",
+		"data_steal": "server",
+		"extraction": "extraction",
+		"commander": "extraction",
+		"staging": "staging",
+	}
+	if not keys.has(p):
+		return
+	var key := str(keys[p])
+	if not map.has(key):
+		return
+	var raw: Variant = map[key]
+	if raw is Transform3D:
+		GameState.objective_pos = (raw as Transform3D).origin
+	elif raw is Vector3:
+		GameState.objective_pos = raw
+
+
+func _radio_for(p: String) -> void:
+	match p:
+		"command":
+			AudioDirector.radio("ACTUAL: Command center is the prize. Do not give it up.")
+		"grid_down":
+			AudioDirector.radio("COMMS: Grid just died. Get to the restore panel.")
+		"data_steal":
+			AudioDirector.radio("INTEL: They are on the servers. Kill the hackers.")
+		"extraction":
+			AudioDirector.radio("ACTUAL: Extract inbound. Do not let that packet leave.")
+		"commander":
+			AudioDirector.radio("ACTUAL: Commander on the LZ. Finish it.")
+		"collapse":
+			AudioDirector.radio("ACTUAL: Ironfall is secure. Good work.")
 
 
 func _wave(ids: Array, marker: String, skill: String) -> void:
@@ -118,27 +187,34 @@ func _wave(ids: Array, marker: String, skill: String) -> void:
 		_spawns.add_child(e)
 		e.global_position = origin + Vector3(randf_range(-4, 4), 1.0, randf_range(-4, 4))
 		var pts: Array[Vector3] = [
-			origin + Vector3(-6, 0, 0),
-			origin + Vector3(6, 0, 0),
-			origin + Vector3(0, 0, -6),
+			origin + Vector3(-7, 0, 0),
+			origin + Vector3(7, 0, 0),
+			origin + Vector3(0, 0, -7),
+			origin + Vector3(-4, 0, 5),
 		]
 		e.setup(str(ids[i]), skill, pts)
 	VfxBus.breach_distortion()
 
 
 func _enemies() -> int:
-	return get_tree().get_nodes_in_group("shadowbreakers").size()
+	var n := 0
+	for node in get_tree().get_nodes_in_group("shadowbreakers"):
+		if node is Shadowbreaker and not (node as Shadowbreaker).health.dead:
+			n += 1
+	return n
 
 
 func _hackers_alive() -> bool:
 	for n in get_tree().get_nodes_in_group("shadowbreakers"):
-		if n is Shadowbreaker and (n as Shadowbreaker).archetype_id == "sb_hacker":
-			return true
+		if n is Shadowbreaker:
+			var sb := n as Shadowbreaker
+			if sb.archetype_id == "sb_hacker" and not sb.health.dead:
+				return true
 	return false
 
 
-func _on_alarm() -> void:
-	pass
+func _on_kill(_id: String) -> void:
+	GameState.kills += 1
 
 
 func _on_restored(_id: String) -> void:
@@ -148,6 +224,7 @@ func _on_restored(_id: String) -> void:
 func _win() -> void:
 	phase = "results"
 	GameState.mission_success = true
+	EventBus.extraction_changed.emit(0.0)
 	EventBus.mission_ended.emit(true)
 	set_process(false)
 
@@ -157,4 +234,5 @@ func _fail() -> void:
 	GameState.mission_success = false
 	EventBus.mission_ended.emit(false)
 	EventBus.objective_changed.emit("MISSION FAILED")
+	EventBus.briefing_changed.emit("The depot is lost. Integrity collapsed or the packet left Ironfall.")
 	set_process(false)

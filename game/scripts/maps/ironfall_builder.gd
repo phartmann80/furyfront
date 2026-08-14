@@ -21,6 +21,8 @@ func build(root: Node3D) -> void:
 	_wall(root, "PerimeterE", Vector3(40, 1.5, -3), Vector3(0.8, 3, 90))
 	_wall(root, "PerimeterW", Vector3(-40, 1.5, -3), Vector3(0.8, 3, 90))
 	_corridor(root)
+	_yard(root)
+	_underground(root)
 	_cover(root)
 	_interact_points(root)
 	_nav(root)
@@ -60,11 +62,23 @@ func _floor(root: Node3D) -> void:
 
 
 func _building(root: Node3D, named: String, pos: Vector3, size: Vector3, color: Color) -> void:
-	_box(root, named, pos, size, color, 1)
-	# interior void: opening on +Z
-	_box(root, named + "DoorwayClear", pos + Vector3(0, 0, size.z * 0.5 + 0.4), Vector3(2.2, 2.4, 1.0), Color(0.1, 0.1, 0.1), 0)
+	var t := 0.38
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var hz := size.z * 0.5
+	_box(root, named + "Floor", pos + Vector3(0, -hy + 0.08, 0), Vector3(size.x, 0.16, size.z), color.darkened(0.12), 1)
+	_box(root, named + "Roof", pos + Vector3(0, hy - 0.08, 0), Vector3(size.x, 0.16, size.z), color.darkened(0.05), 1)
+	_box(root, named + "WallW", pos + Vector3(-hx + t * 0.5, 0, 0), Vector3(t, size.y, size.z), color, 1)
+	_box(root, named + "WallE", pos + Vector3(hx - t * 0.5, 0, 0), Vector3(t, size.y, size.z), color, 1)
+	_box(root, named + "WallS", pos + Vector3(0, 0, -hz + t * 0.5), Vector3(size.x, size.y, t), color, 1)
+	var door := 2.5
+	var jamb := (size.x - door) * 0.5
+	if jamb > 0.4:
+		_box(root, named + "DoorL", pos + Vector3(-door * 0.5 - jamb * 0.5, 0, hz - t * 0.5), Vector3(jamb, size.y, t), color, 1)
+		_box(root, named + "DoorR", pos + Vector3(door * 0.5 + jamb * 0.5, 0, hz - t * 0.5), Vector3(jamb, size.y, t), color, 1)
+		_box(root, named + "Lintel", pos + Vector3(0, hy * 0.45, hz - t * 0.5), Vector3(door, size.y * 0.35, t), color, 1)
 	var obs := NavigationObstacle3D.new()
-	obs.radius = maxf(size.x, size.z) * 0.45
+	obs.radius = minf(size.x, size.z) * 0.22
 	obs.height = size.y
 	obs.position = pos
 	root.add_child(obs)
@@ -81,16 +95,31 @@ func _corridor(root: Node3D) -> void:
 	_box(root, "ExtractPad", Vector3(0, 0.05, -42), Vector3(12, 0.1, 10), Color(0.45, 0.32, 0.12), 1)
 
 
+func _yard(root: Node3D) -> void:
+	_box(root, "YardPad", Vector3(-22, 0.04, 22), Vector3(16, 0.08, 14), Color(0.2, 0.21, 0.22), 1)
+	_box(root, "TruckA", Vector3(-26, 0.85, 20), Vector3(5.5, 1.6, 2.2), Color(0.22, 0.26, 0.2), 1)
+	_box(root, "TruckB", Vector3(-18, 0.75, 24), Vector3(4.8, 1.4, 2.0), Color(0.24, 0.24, 0.2), 1)
+	_box(root, "CrateStack", Vector3(-14, 0.7, 18), Vector3(2.2, 1.4, 2.2), Color(0.36, 0.3, 0.2), 1)
+
+
+func _underground(root: Node3D) -> void:
+	_box(root, "UnderRamp", Vector3(8, -0.2, -30), Vector3(3.2, 0.5, 8), Color(0.2, 0.2, 0.21), 1)
+	_box(root, "UnderHallL", Vector3(6.4, 0.9, -36), Vector3(0.4, 2.2, 12), Color(0.18, 0.19, 0.2), 1)
+	_box(root, "UnderHallR", Vector3(9.6, 0.9, -36), Vector3(0.4, 2.2, 12), Color(0.18, 0.19, 0.2), 1)
+
+
 func _cover(root: Node3D) -> void:
 	var spots := [
 		Vector3(-6, 0.5, 24), Vector3(6, 0.5, 24), Vector3(-10, 0.5, 12),
 		Vector3(10, 0.5, 12), Vector3(-8, 0.5, -4), Vector3(8, 0.5, -4),
 		Vector3(-14, 0.5, -22), Vector3(14, 0.5, -22), Vector3(-4, 0.5, -38),
-		Vector3(4, 0.5, -38), Vector3(-18, 0.5, 20), Vector3(16, 0.5, 18)
+		Vector3(4, 0.5, -38), Vector3(-18, 0.5, 20), Vector3(16, 0.5, 18),
+		Vector3(-4, 0.5, 30), Vector3(4, 0.5, 30), Vector3(0, 0.5, 8)
 	]
 	var i := 0
 	for s in spots:
-		_box(root, "Cover%d" % i, s, Vector3(1.6, 1.0, 0.6), Color(0.38, 0.34, 0.28), PhysLayers.WORLD | PhysLayers.COVER)
+		var body := _box(root, "Cover%d" % i, s, Vector3(1.6, 1.0, 0.7), Color(0.38, 0.34, 0.28), PhysLayers.WORLD | PhysLayers.COVER)
+		body.add_to_group("cover")
 		i += 1
 
 
@@ -139,7 +168,7 @@ func _nav(root: Node3D) -> void:
 	region.bake_navigation_mesh(true)
 
 
-func _box(root: Node3D, named: String, pos: Vector3, size: Vector3, color: Color, layer: int) -> void:
+func _box(root: Node3D, named: String, pos: Vector3, size: Vector3, color: Color, layer: int) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = named
 	body.collision_layer = layer
@@ -160,3 +189,4 @@ func _box(root: Node3D, named: String, pos: Vector3, size: Vector3, color: Color
 	body.add_child(mi)
 	root.add_child(body)
 	body.global_position = pos
+	return body

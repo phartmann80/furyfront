@@ -1,7 +1,7 @@
 class_name Shadowbreaker
 extends CharacterBody3D
 
-enum State { IDLE, PATROL, SUSPICIOUS, INVESTIGATE, ENGAGE, SEARCH, RETREAT }
+enum State { IDLE, PATROL, SUSPICIOUS, INVESTIGATE, ENGAGE, SEARCH, COVER, FLANK, RETREAT }
 
 const GRAVITY := 22.0
 
@@ -17,6 +17,7 @@ var patrol_i := 0
 var _fire_t := 0.0
 var _reposition_t := 0.0
 var _state_t := 0.0
+var _stuck_t := 0.0
 var _agent: NavigationAgent3D
 var health: HealthComponent
 var _weapon: Dictionary = {}
@@ -110,9 +111,11 @@ func _physics_process(delta: float) -> void:
 			_patrol()
 		State.SUSPICIOUS, State.INVESTIGATE, State.SEARCH:
 			_go_lkp()
-			if _state_t > 6.0 and not sees:
+			if global_position.distance_to(last_known) < 1.6 and not sees:
+				_set_state(State.SEARCH if has_lkp else State.PATROL)
+			if _state_t > 7.0 and not sees:
 				_set_state(State.PATROL)
-		State.ENGAGE:
+		State.COVER, State.FLANK, State.ENGAGE:
 			_engage(delta, player, sees)
 		State.RETREAT:
 			_retreat()
@@ -141,25 +144,79 @@ func _engage(delta: float, player: Node3D, sees: bool) -> void:
 		_set_state(State.SEARCH)
 		return
 	var dist := global_position.distance_to(player.global_position)
-	var flank := float(skill.get("flank", 0.3))
 	_reposition_t -= delta
 	if _reposition_t <= 0.0:
-		var side := transform.basis.x * (4.0 if randf() < flank else 0.0) * (1.0 if randf() > 0.5 else -1.0)
-		var back := -transform.basis.z * (2.0 if dist < 8.0 else -1.5)
-		_agent.target_position = player.global_position + side + back
-		_reposition_t = 1.2 + randf() * 0.8
-	if def.get("hacksObjectives", false) and dist > 14.0:
-		# Push objective instead of chasing forever.
-		var servers := get_tree().get_nodes_in_group("objective_server")
-		if servers.size() > 0 and servers[0] is Node3D:
-			_agent.target_position = (servers[0] as Node3D).global_position
+		_reposition_t = 1.4 + randf() * 1.1
+		var flank_bias := float(skill.get("flank", 0.3))
+		if archetype_id == "sb_phantom":
+			flank_bias = maxf(flank_bias, 0.72)
+		elif archetype_id == "sb_enforcer":
+			flank_bias = minf(flank_bias, 0.28)
+		if def.get("hacksObjectives", false) and dist > 11.0:
+			var servers := get_tree().get_nodes_in_group("objective_server")
+			if servers.size() > 0 and servers[0] is Node3D:
+				_agent.target_position = (servers[0] as Node3D).global_position
+				_set_state(State.ENGAGE)
+		elif randf() < flank_bias:
+			_agent.target_position = _cover_or_flank(player, true)
+			_set_state(State.FLANK)
+		else:
+			_agent.target_position = _cover_or_flank(player, false)
+			_set_state(State.COVER)
+	if archetype_id == "sb_enforcer" and dist > 10.0:
+		_agent.target_position = player.global_position + player.transform.basis.x * 2.5
+	if archetype_id == "sb_phantom":
+		_guard_hacker(player)
 	_fire_t -= delta
 	if _fire_t <= 0.0:
 		_fire_t = float(skill.get("reactionS", 0.35)) + CombatMath.interval_s(_weapon)
-		if randf() <= float(skill.get("accuracy", 0.5)):
+		var acc := float(skill.get("accuracy", 0.5))
+		if state == State.COVER:
+			acc *= 1.12
+		if randf() <= acc:
 			_shoot(player)
 		if randf() < float(skill.get("grenadeChance", 0.1)) and dist < 18.0:
 			EventBus.notify.emit("Shadowbreaker grenade!")
+
+
+func _cover_or_flank(player: Node3D, flank: bool) -> Vector3:
+	var best := player.global_position + -player.transform.basis.z * (-4.0)
+	var best_s := -1.0e9
+	for n in get_tree().get_nodes_in_group("cover"):
+		if not (n is Node3D):
+			continue
+		var c: Vector3 = (n as Node3D).global_position
+		var away := c - player.global_position
+		away.y = 0.0
+		if away.length() < 0.4:
+			continue
+		away = away.normalized()
+		var hide := c + away * 1.4
+		hide.y = global_position.y
+		var travel := global_position.distance_to(hide)
+		if travel > 24.0:
+			continue
+		var right := player.transform.basis.x
+		var lateral := absf(right.dot((hide - player.global_position).normalized()))
+		var score := 10.0 - travel * 0.2
+		if flank:
+			score += lateral * 12.0
+		else:
+			score += 5.0 if travel < 10.0 else 0.0
+		if score > best_s:
+			best_s = score
+			best = hide
+	return best
+
+
+func _guard_hacker(player: Node3D) -> void:
+	for n in get_tree().get_nodes_in_group("shadowbreakers"):
+		if n is Shadowbreaker and (n as Shadowbreaker).archetype_id == "sb_hacker":
+			var h := n as Node3D
+			var mid := h.global_position.lerp(player.global_position, 0.35)
+			if global_position.distance_to(h.global_position) > 8.0:
+				_agent.target_position = mid
+			return
 
 
 func _shoot(player: Node3D) -> void:
@@ -200,10 +257,37 @@ func _steer(_delta: float) -> void:
 		var speed: float = _agent.max_speed
 		if state == State.ENGAGE:
 			speed *= 1.05
+		elif state == State.FLANK:
+			speed *= 1.18
+		elif state == State.COVER:
+			speed *= 0.62
+		elif state == State.INVESTIGATE:
+			speed *= 0.9
 		velocity.x = dir.x * speed
 		velocity.z = dir.z * speed
-		if dir.length_squared() > 0.0001:
-			look_at(global_position + dir, Vector3.UP)
+		var look_dir := dir
+		var player := _player()
+		if player and (state == State.ENGAGE or state == State.COVER) and _can_see(player):
+			look_dir = player.global_position - global_position
+			look_dir.y = 0.0
+		if is_on_wall():
+			var n := get_wall_normal()
+			n.y = 0.0
+			if n.length_squared() > 0.001:
+				n = n.normalized()
+				var slide := Vector3(n.z, 0.0, -n.x)
+				velocity.x += slide.x * speed * 0.55
+				velocity.z += slide.z * speed * 0.55
+		var horiz := Vector3(velocity.x, 0.0, velocity.z)
+		if horiz.length() < 0.25 and dir.length() > 1.6:
+			_stuck_t += _delta
+			if _stuck_t > 0.7:
+				_agent.target_position = global_position + Vector3(randf_range(-5.0, 5.0), 0.0, randf_range(-5.0, 5.0))
+				_stuck_t = 0.0
+		else:
+			_stuck_t = 0.0
+		if look_dir.length_squared() > 0.0001:
+			look_at(global_position + look_dir.normalized(), Vector3.UP)
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -240,7 +324,7 @@ func hear_event(pos: Vector3) -> void:
 	last_known = pos
 	has_lkp = true
 	if state == State.PATROL or state == State.IDLE:
-		_set_state(State.SUSPICIOUS)
+		_set_state(State.INVESTIGATE)
 
 
 func receive_hit(amount: float, hitbox: String, from: Vector3) -> Dictionary:

@@ -45,7 +45,7 @@ func _allies(origin: Vector3) -> void:
 	for i in 3:
 		var a := AllySoldier.new()
 		add_child(a)
-		a.setup(origin + Vector3(-2.0 + i * 2.0, 0, 1.5))
+		a.setup(origin + Vector3(-2.0 + i * 2.0, 0, 1.5), i)
 
 
 func _cinematic_overlay() -> void:

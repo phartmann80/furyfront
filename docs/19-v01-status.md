@@ -1,48 +1,34 @@
 # Vertical Slice 0.1 — engineering status
 
-Date: 2026-08-13 (updated for PC web retarget)
+Date: 2026-08-14
 
 ## Platform mandate
 
-**PC web first.** Android APK milestone cancelled for this slice. One Godot gameplay project; touch/mobile input retained for future wrapped/native clients.
+**PC web first.** Godot 4.7.1.stable, Compatibility renderer, unthreaded web export.
 
-## What is true
+Landing page at `furyfront.app/` is **approved for this stage**. Final legal/footer/SEO polish is deferred — see `docs/22-backlog.md`. Primary work is the game at `/play/`.
 
-- Godot **4.7.1.stable** exports a **Web** build (`export/web/`) with Compatibility renderer.
-- Canonical JSON validates. Godot headless combat tests pass.
-- Local preview: `node scripts/serve-web.mjs` → `http://127.0.0.1:8088/`
-- Foundation checkpoint commit: `60ceb13`. Web retarget in follow-up commit.
+## Hosting (stable enough — stop unless the game needs it)
 
-## Web export artifacts (release, unthreaded)
+- Dedicated nginx vhost + Let's Encrypt for `furyfront.app` / `www.furyfront.app`
+- Versioned release `d63bfbf` at `/var/www/furyfront/releases/<commit>/`
+- `/health` reports matching WASM / PCK / JS commit
+- AtlasLM removed from this host; TuGPT workers preserved
+- First orchestration script failed with **exit 2** because of Windows CRLF in the bash file (`set: pipefail` invalid). No server changes that run. Re-uploaded LF and completed.
 
-| File | Raw size |
-| --- | ---: |
-| `index.wasm` | 39.5 MB |
-| `index.pck` | 122 KB |
-| `index.js` | 273 KB |
-| `index.html` + worklets + icons | ~55 KB |
-| **Total on disk** | **~40.0 MB** |
-| **gzip (wasm+js+pck+html+worklets)** | **~10.3 MB** |
+## What is true in-engine (this pass)
 
-Initial download is **not** multi-gigabyte. PCK is tiny because V0.1 is procedural graybox + JSON + compiled scripts.
+- FPS controller: ground accel/decel, air control, smoothed crouch, sprint FOV, light bob, landing dip, vault
+- KF-16: rifle+arms viewmodel, separate recoil offset with recovery, sway, fire punch, empty mag click rate-limit, muzzle smoke/shells (not Low)
+- Ironfall: hollow interiors, vehicle yard, underground hall, tagged cover
+- Shadowbreakers: investigate gunfire, occupy far side of cover, flank via lateral cover, hackers push servers, phantoms guard hackers
+- MissionDirector: phase changes from enemy/objective events; extraction countdown; HUD briefing line
+- Full Broken Perimeter playthrough still needs a **manual** browser pass (pointer lock)
 
-## Browser boot (Playwright smoke)
+## Remaining gameplay blockers
 
-- Godot boot OK, WebGL2 / GLES3 Compatibility
-- Console: `single-threaded, no GDExtension support`
-- Start menu renders (title, quality, START OPERATION)
-- **Full mission playthrough** not automated end-to-end in CI yet — use manual browser QA for pointer-lock FPS loop
-
-## Remaining before calling Web V0.1 done
-
-1. Manual playtest: start → Ironfall → WASD/mouse → KF-16 → AI → mission results
-2. FPS/memory on target gaming PC hardware
-3. HTTPS deploy (Cloudflare Pages / nginx / S3+CloudFront)
-4. Art pass (arms, KF-16, enemy silhouettes) without breaking 60 FPS budget
-
-## Git
-
-- Remote: **none configured**
-- Branch: `master`
-- Foundation: `60ceb13`
-- Web retarget: see latest commit after this doc update
+1. Manual playtest of the full mission on HTTPS `/play/`
+2. Measure combat FPS / memory on a gaming PC (not empty spawn)
+3. KF-16 is still CSG boxes — readable, not production art
+4. AI cover uses crate positions; no lean/peek animation
+5. Allies still follow the player and do not fight

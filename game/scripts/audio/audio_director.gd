@@ -18,7 +18,11 @@ func unlock() -> void:
 func gunshot(id: String, pos: Vector3) -> void:
 	if not unlocked:
 		return
-	_play_at(pos, 0.22 if id.begins_with("wpn_kf") else 0.16, 0.9)
+	if id.begins_with("wpn_kf"):
+		_play_at(pos, 0.09, 1.35)
+		_play_at(pos, 0.18, 0.55)
+	else:
+		_play_at(pos, 0.16, 0.9)
 
 
 func empty_click() -> void:

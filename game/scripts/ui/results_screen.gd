@@ -17,7 +17,7 @@ func show_results(success: bool) -> void:
 	t.add_theme_color_override("font_color", Color(0.91, 0.64, 0.09) if success else Color(0.85, 0.25, 0.2))
 	add_child(t)
 	var d := Label.new()
-	d.text = "Operation: Broken Perimeter  ·  Ironfall Depot\nClick the game to recapture the mouse, or press Esc."
+	d.text = "Operation: Broken Perimeter  ·  Ironfall Depot\nKills %d  ·  Time %ds\nClick the game to recapture the mouse, or press Esc." % [GameState.kills, int(GameState.mission_clock)]
 	d.position = Vector2(560, 440)
 	d.size = Vector2(800, 80)
 	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

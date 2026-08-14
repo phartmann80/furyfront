@@ -38,15 +38,8 @@ static func spawn(parent: Node, xform: Transform3D) -> PlayerController:
 	var hp := HealthComponent.new()
 	hp.name = "HealthComponent"
 	p.add_child(hp)
-	# First-person arms placeholder (animation-ready socket)
-	var arms := MeshInstance3D.new()
-	arms.name = "FpsArms"
-	var arm_mesh := BoxMesh.new()
-	arm_mesh.size = Vector3(0.12, 0.12, 0.35)
-	arms.mesh = arm_mesh
-	arms.position = Vector3(-0.18, -0.16, -0.28)
-	cam.add_child(arms)
 	parent.add_child(p)
 	p.global_transform = xform
 	GameState.spawn_xform = xform
 	return p
+

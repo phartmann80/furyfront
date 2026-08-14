@@ -29,9 +29,9 @@ func _build() -> void:
 	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
 	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(catcher)
-	_label("FURY FRONT", Vector2(360, 168), Vector2(1200, 96), 72, Color(0.91, 0.64, 0.09), 12)
-	_label("PC WEB  ·  OPERATION: BROKEN PERIMETER  ·  IRONFALL DEPOT", Vector2(260, 268), Vector2(1400, 40), 18, Color(0.92, 0.93, 0.94), 6)
-	_label("WASD move  ·  Mouse look  ·  LMB fire  ·  RMB ADS  ·  R reload  ·  Shift sprint  ·  C crouch  ·  Space jump  ·  E interact", Vector2(80, 318), Vector2(1760, 36), 15, Color(0.84, 0.86, 0.88), 5)
+	_label("FURY FRONT", Vector2(360, 168), Vector2(1200, 96), 72, Color(0.93, 0.62, 0.16), 14)
+	_label("PC WEB  ·  OPERATION: BROKEN PERIMETER  ·  IRONFALL DEPOT", Vector2(260, 268), Vector2(1400, 40), 18, Color(0.90, 0.88, 0.82), 7)
+	_label("WASD move  ·  Mouse look  ·  LMB fire  ·  RMB ADS  ·  R reload  ·  Shift sprint  ·  C crouch  ·  Space jump  ·  E interact", Vector2(80, 318), Vector2(1760, 36), 15, Color(0.82, 0.80, 0.74), 6)
 	_quality_row()
 	var start := Button.new()
 	start.text = "START OPERATION"
@@ -41,7 +41,7 @@ func _build() -> void:
 	start.pressed.connect(_start)
 	add_child(start)
 	start.grab_focus()
-	_label("Click starts audio and mouse capture (browser requirement).", Vector2(360, 640), Vector2(1200, 32), 14, Color(0.78, 0.8, 0.82), 4)
+	_label("Click starts audio and mouse capture (browser requirement).", Vector2(360, 640), Vector2(1200, 32), 14, Color(0.72, 0.70, 0.64), 5)
 
 
 func _label(text: String, pos: Vector2, size: Vector2, font_size: int, color: Color, outline: int) -> Label:
@@ -52,7 +52,7 @@ func _label(text: String, pos: Vector2, size: Vector2, font_size: int, color: Co
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
-	l.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.03, 0.82))
+	l.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02, 0.92))
 	l.add_theme_constant_override("outline_size", outline)
 	add_child(l)
 	return l
@@ -87,8 +87,8 @@ func _quality_row() -> void:
 
 func _apply_style(b: Button, selected: bool, primary: bool) -> void:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color(0.07, 0.08, 0.09, 0.78)
-	box.border_color = Color(0.91, 0.64, 0.09) if selected or primary else Color(0.9, 0.91, 0.93, 0.7)
+	box.bg_color = Color(0.10, 0.06, 0.03, 0.42 if primary else 0.34)
+	box.border_color = Color(0.93, 0.62, 0.16, 0.95) if selected or primary else Color(0.78, 0.58, 0.32, 0.45)
 	box.set_border_width_all(2 if primary or selected else 1)
 	box.corner_radius_top_left = 2
 	box.corner_radius_top_right = 2
@@ -96,15 +96,17 @@ func _apply_style(b: Button, selected: bool, primary: bool) -> void:
 	box.corner_radius_bottom_right = 2
 	box.set_content_margin_all(8)
 	var hover := box.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(0.12, 0.11, 0.09, 0.88)
-	hover.border_color = Color(0.91, 0.64, 0.09)
+	hover.bg_color = Color(0.16, 0.09, 0.04, 0.55)
+	hover.border_color = Color(0.95, 0.70, 0.22, 0.98)
 	b.add_theme_stylebox_override("normal", box)
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("pressed", hover)
 	b.add_theme_stylebox_override("focus", hover)
-	b.add_theme_color_override("font_color", Color(0.91, 0.64, 0.09) if selected else Color(0.95, 0.96, 0.97))
-	b.add_theme_color_override("font_hover_color", Color(0.91, 0.64, 0.09))
-	b.add_theme_color_override("font_pressed_color", Color(0.91, 0.64, 0.09))
+	b.add_theme_color_override("font_color", Color(0.93, 0.62, 0.16) if selected else Color(0.94, 0.90, 0.82))
+	b.add_theme_color_override("font_hover_color", Color(0.96, 0.78, 0.32))
+	b.add_theme_color_override("font_pressed_color", Color(0.93, 0.62, 0.16))
+	b.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.01, 0.85))
+	b.add_theme_constant_override("outline_size", 4)
 
 
 func _start() -> void:

@@ -3,7 +3,7 @@
 | Asset | Path | Notes |
 | --- | --- | --- |
 | Hero still | `assets/hero-still.png` | Landing key art only — operators at Ironfall Depot. No baked-in title or buttons. Deployed as `/media/hero-still.png`. HTML owns all overlay copy. |
-| Play start background | `assets/play-start-background.jpg` | Godot `/play/` start still from the original battlefield painting (1920×1080). Runtime copy: `game/assets/ui/start_background.jpg`. Live Godot Controls own title, quality, and Start. |
+| Play start background | `assets/play-start-background.jpg` | 1920×1080 `/play/` plate from generated battlefield `assets/play-start-battlefield.png`. No baked menu. Runtime: `game/assets/ui/start_background.jpg`. |
 | Hero cinematic | `assets/hero-video/hero.MP4` | Original Fury Front cinematic for the Watch Trailer modal. **Do not rename or replace without approval.** H.264/AAC, ~848×464, ~10 s, ~2 MB. |
 | Hero poster fallback | `assets/breached_entrance.webp` | Alternate still. Not the active landing hero. |
 | Squad / operator reference stills | `assets/*.webp` | Marketing/reference imagery. Not shipped in V0.1 Godot PCK. |

@@ -44,7 +44,8 @@ Never assume WebGPU. Decal nodes are not used (quad impacts instead). Glow is of
 ## 3. Client topology (V0.1)
 
 ```
-Godot Web (index.html + wasm + pck)
+furyfront.app/              Website — hero cinematic, PLAY FURY FRONT
+furyfront.app/play/         Godot Web (index.html + wasm + pck)
   StartMenu (click → audio unlock + pointer lock)
   InputService (WASD/mouse primary, touch kept)
   PlayerMotor + WeaponController
@@ -53,6 +54,10 @@ Godot Web (index.html + wasm + pck)
   MissionDirector (Broken Perimeter)
   HUD + ResultsScreen
 ```
+
+**Infrastructure lock:** our own HTTPS server at `furyfront.app`. Vercel/Netlify are not production requirements.
+
+See `docs/21-server-architecture.md` for deployment pipeline, health endpoint, and future multiplayer gateway.
 
 Online later:
 

@@ -7,6 +7,13 @@
   "workspaces": ["packages/shared", "packages/server"],
   "scripts": {
     "validate": "node scripts/validate.mjs",
-    "test": "npm run validate && npm run test -w @furyfront/shared"
+    "test": "npm run validate && npm run test -w @furyfront/shared",
+    "build:deploy": "node scripts/build-deploy.mjs",
+    "build:deploy:fast": "node scripts/build-deploy.mjs --skip-export",
+    "serve": "node scripts/serve-furyfront.mjs",
+    "preview": "node scripts/build-deploy.mjs && node scripts/serve-furyfront.mjs",
+    "deploy:plan": "bash deploy/deploy-furyfront.sh plan",
+    "deploy:production": "bash deploy/deploy-furyfront.sh deploy",
+    "deploy:rollback": "bash deploy/deploy-furyfront.sh rollback"
   }
 }

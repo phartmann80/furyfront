@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fury Front — premium tactical military FPS. Defend installations against Shadowbreaker infiltration.">
+  <meta name="theme-color" content="#0d0f12">
+  <title>Fury Front — Tactical Military FPS</title>
+  <link rel="icon" href="/play/index.icon.png" type="image/png">
+  <link rel="preload" href="/media/hero-poster.webp" as="image" type="image/webp">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand-mark">FURY FRONT</span>
+      <nav class="topnav" aria-label="Primary">
+        <a href="#about">About</a>
+        <a href="/play/" class="topnav-play">Play</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="hero" aria-label="Fury Front cinematic hero">
+      <video
+        class="hero-video"
+        id="hero-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="/media/hero-poster.webp"
+        aria-hidden="true"
+      >
+        <source src="/media/hero.MP4" type="video/mp4">
+      </video>
+      <div class="hero-poster" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <p class="hero-eyebrow">Tactical Military FPS</p>
+        <h1 class="hero-title">FURY FRONT</h1>
+        <p class="hero-tagline">
+          Fury Front soldiers hold the line against Shadowbreaker infiltration.
+          Stealth, electronic warfare, sabotage — not monsters. Real combat.
+        </p>
+        <div class="hero-actions">
+          <a href="/play/" class="btn btn-primary" id="play-btn">PLAY FURY FRONT</a>
+          <button type="button" class="btn btn-secondary" id="watch-trailer">WATCH TRAILER</button>
+        </div>
+        <p class="hero-note">Operation: Broken Perimeter · Ironfall Depot · PC Web</p>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="about-inner">
+        <h2>Hold the perimeter</h2>
+        <p>
+          Fury Front is a cinematic multiplayer-ready FPS built in Godot 4.
+          Defend command centers, intercept extraction teams, and stop elite
+          Shadowbreaker operatives before they breach your installation.
+        </p>
+        <ul class="about-points">
+          <li>Base Defense signature mode</li>
+          <li>Keyboard + mouse FPS controls in browser</li>
+          <li>Shadowbreaker AI — Phantom, Hacker, Enforcer, Commander</li>
+          <li>Canonical weapon pipeline — KF-16, WASP-9, K5, combat knife</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Fury Front · <a href="https://furyfront.app">furyfront.app</a></p>
+  </footer>
+
+  <dialog class="trailer-modal" id="trailer-modal" aria-labelledby="trailer-title">
+    <div class="trailer-shell">
+      <button type="button" class="trailer-close" id="trailer-close" aria-label="Close trailer">&times;</button>
+      <h2 id="trailer-title" class="visually-hidden">Fury Front trailer</h2>
+      <video
+        class="trailer-player"
+        id="trailer-player"
+        controls
+        playsinline
+        preload="none"
+        poster="/media/hero-poster.webp"
+      >
+        <source src="/media/hero.MP4" type="video/mp4">
+      </video>
+    </div>
+  </dialog>
+
+  <script src="/js/site.js" defer></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# Node
+# Node / build artifacts
 node_modules/
 dist/
 *.log
@@ -13,6 +13,21 @@ android/build/
 *.apk
 *.aab
 game/.godot/
+
+# Deploy secrets and logs (never commit)
+deploy/deploy.env
+deploy/logs/
+*.pem
+*.key
+*.crt
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Browser automation / local screenshots
+.playwright-mcp/
+playwright-*.png
+*-screenshot.png
 
 # Quarantined engine caches
 [Ll]ibrary/

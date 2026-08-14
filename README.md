@@ -27,7 +27,8 @@ Shadowbreakers are elite human / human-enhanced infiltrators (stealth, EW, drone
 | Layer | Choice |
 | --- | --- |
 | Game client | Godot 4.x, **Compatibility (`gl_compatibility`)** as the production renderer for web |
-| PC Web | **Priority 1** — Godot web export, HTTPS static host |
+| PC Web | **Priority 1** — Godot web export on **our server** (`furyfront.app`) |
+| Web hosting | **Own infrastructure** — not Vercel/Netlify-required |
 | Desktop | Native packaging later if useful |
 | Android | Packaged/wrapped web or native Godot export after Web V0.1 (spike, not now) |
 | iOS | Same as Android, after web is proven |
@@ -49,12 +50,10 @@ Do not spend this milestone on Android SDK/build-tools. Touch HUD and mobile inp
 
 ## Vertical Slice 0.1
 
-Open a URL → start screen → Start Operation: Broken Perimeter → Ironfall Depot → WASD / mouse FPS → fire the **KF-16** (plus WASP-9, K5 sidearm, knife) → fight Shadowbreaker AI → complete or fail the mission → results screen.
+Open **https://furyfront.app** → hero → **PLAY FURY FRONT** → start screen → Operation: Broken Perimeter → Ironfall Depot → WASD / mouse FPS → KF-16 → Shadowbreaker AI → results.
 
 ```
-Godot web export → HTTPS (or local MIME-correct server)
-→ start screen (click unlocks audio + pointer lock)
-→ Ironfall graybox → KF-16 → Shadowbreaker AI → Base Defense → results
+Landing (/) → /play/ Godot export → start screen → Ironfall → combat → results
 ```
 
 ## Repository map
@@ -67,7 +66,10 @@ packages/shared            TS combat/XP/economy + CI
 packages/server            Matchmaking stubs (not wired)
 scripts/validate.mjs       Canonical data CI
 scripts/sync-godot-data.mjs
-scripts/serve-web.mjs      Local web preview (wasm MIME)
+scripts/build-deploy.mjs   Validate, export, versioned deploy bundle
+scripts/serve-furyfront.mjs Production-like local server (site + /play/)
+deploy/deploy-furyfront.sh Production deploy (rsync, symlink, nginx, rollback)
+deploy/nginx/              furyfront.app nginx template
 samples/_quarantine        Unity / Unreal / URP samples (not used)
 mockups/                   HTML HUD/HQ references
 ```
@@ -78,4 +80,4 @@ mockups/                   HTML HUD/HQ references
 - Input is abstracted: keyboard/mouse is the PC-web benchmark; touch remains for future mobile clients.
 - One weapon definition feeds HUD, FPS, AI, and future netcode.
 
-See `docs/01-game-design-document.md`, `docs/11-technical-architecture.md`, `docs/17-vertical-slice-01.md`, `docs/20-web-hosting.md`.
+See `docs/01-game-design-document.md`, `docs/11-technical-architecture.md`, `docs/17-vertical-slice-01.md`, `docs/20-web-hosting.md`, `docs/21-server-architecture.md`.

@@ -23,8 +23,10 @@ static func spawn(parent: Node, xform: Transform3D) -> PlayerController:
 	head.add_child(cam)
 	var ir := RayCast3D.new()
 	ir.name = "InteractRay"
-	ir.target_position = Vector3(0, 0, -2.4)
+	ir.target_position = Vector3(0, 0, -3.2)
 	ir.collision_mask = PhysLayers.INTERACT
+	ir.hit_from_inside = true
+	ir.enabled = true
 	cam.add_child(ir)
 	var wm := WeaponManager.new()
 	wm.name = "WeaponManager"

@@ -191,10 +191,10 @@ func _cover_or_flank(player: Node3D, flank: bool) -> Vector3:
 		if away.length() < 0.4:
 			continue
 		away = away.normalized()
-		var hide := c + away * 1.4
+		var hide := c + away * 1.85
 		hide.y = global_position.y
 		var travel := global_position.distance_to(hide)
-		if travel > 24.0:
+		if travel > 22.0:
 			continue
 		var right := player.transform.basis.x
 		var lateral := absf(right.dot((hide - player.global_position).normalized()))

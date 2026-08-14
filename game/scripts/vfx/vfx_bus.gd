@@ -3,8 +3,8 @@ extends Node
 func muzzle(pos: Vector3, _dir: Vector3) -> void:
 	var l := OmniLight3D.new()
 	l.light_color = Color(1.0, 0.78, 0.35)
-	l.light_energy = 5.2 * GraphicsProfile.particle_scale
-	l.omni_range = 3.8
+	l.light_energy = 7.4 * GraphicsProfile.particle_scale
+	l.omni_range = 4.4
 	l.shadow_enabled = false
 	get_tree().current_scene.add_child(l)
 	l.global_position = pos
@@ -81,7 +81,7 @@ func impact(pos: Vector3, normal: Vector3, flesh: bool = false) -> void:
 		return
 	var mi := MeshInstance3D.new()
 	var quad := QuadMesh.new()
-	quad.size = Vector2(0.18, 0.18) if flesh else Vector2(0.22, 0.22)
+	quad.size = Vector2(0.26, 0.26) if flesh else Vector2(0.22, 0.22)
 	mi.mesh = quad
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

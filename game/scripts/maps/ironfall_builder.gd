@@ -5,34 +5,46 @@ var markers: Dictionary = {}
 
 func build(root: Node3D) -> void:
 	_env(root)
-	_floor(root)
-	_building(root, "CommandCenter", Vector3(0, 2.5, 0), Vector3(14, 5, 12), Color(0.32, 0.34, 0.36))
-	_building(root, "Barracks", Vector3(26, 2.0, 8), Vector3(12, 4, 10), Color(0.35, 0.3, 0.28))
-	_building(root, "Armory", Vector3(-26, 2.0, 8), Vector3(10, 4, 10), Color(0.28, 0.3, 0.32))
-	_building(root, "Comms", Vector3(-20, 1.8, -14), Vector3(8, 3.6, 8), Color(0.25, 0.36, 0.4))
-	_building(root, "ServerIntel", Vector3(20, 1.8, -14), Vector3(10, 3.6, 8), Color(0.2, 0.28, 0.34))
-	var srv := root.get_node("ServerIntel")
+	# Geometry must be children of the region or the bake parses an empty tree.
+	var geo := NavigationRegion3D.new()
+	geo.name = "NavRegion"
+	root.add_child(geo)
+	_floor(geo)
+	_building(geo, "CommandCenter", Vector3(0, 2.5, 0), Vector3(14, 5, 12), Color(0.32, 0.34, 0.36))
+	_building(geo, "Barracks", Vector3(26, 2.0, 8), Vector3(12, 4, 10), Color(0.35, 0.3, 0.28))
+	_building(geo, "Armory", Vector3(-26, 2.0, 8), Vector3(10, 4, 10), Color(0.28, 0.3, 0.32))
+	_building(geo, "Comms", Vector3(-20, 1.8, -14), Vector3(8, 3.6, 8), Color(0.25, 0.36, 0.4))
+	_building(geo, "ServerIntel", Vector3(20, 1.8, -14), Vector3(10, 3.6, 8), Color(0.2, 0.28, 0.34))
+	var srv := Marker3D.new()
+	srv.name = "ServerIntel"
+	root.add_child(srv)
+	srv.global_position = Vector3(20, 1.0, -9.2)
 	srv.add_to_group("objective_server")
-	_building(root, "Watchtower", Vector3(10, 6.0, 30), Vector3(4, 12, 4), Color(0.4, 0.38, 0.32))
-	_wall(root, "GateLeft", Vector3(-8, 1.5, 34), Vector3(10, 3, 1.2))
-	_wall(root, "GateRight", Vector3(8, 1.5, 34), Vector3(10, 3, 1.2))
-	_wall(root, "PerimeterN", Vector3(0, 1.5, 42), Vector3(80, 3, 0.8))
-	_wall(root, "PerimeterS", Vector3(0, 1.5, -48), Vector3(80, 3, 0.8))
-	_wall(root, "PerimeterE", Vector3(40, 1.5, -3), Vector3(0.8, 3, 90))
-	_wall(root, "PerimeterW", Vector3(-40, 1.5, -3), Vector3(0.8, 3, 90))
-	_corridor(root)
-	_yard(root)
-	_underground(root)
-	_cover(root)
+	_building(geo, "Watchtower", Vector3(10, 6.0, 30), Vector3(4, 12, 4), Color(0.4, 0.38, 0.32))
+	_wall(geo, "GateLeft", Vector3(-8, 1.5, 34), Vector3(10, 3, 1.2))
+	_wall(geo, "GateRight", Vector3(8, 1.5, 34), Vector3(10, 3, 1.2))
+	_wall(geo, "PerimeterN", Vector3(0, 1.5, 42), Vector3(80, 3, 0.8))
+	_wall(geo, "PerimeterS", Vector3(0, 1.5, -48), Vector3(80, 3, 0.8))
+	_wall(geo, "PerimeterE", Vector3(40, 1.5, -3), Vector3(0.8, 3, 90))
+	_wall(geo, "PerimeterW", Vector3(-40, 1.5, -3), Vector3(0.8, 3, 90))
+	_corridor(geo)
+	_yard(geo)
+	_underground(geo)
+	_cover(geo)
 	_interact_points(root)
-	_nav(root)
+	_bake_nav(geo)
 	markers["staging"] = Transform3D(Basis.IDENTITY, Vector3(0, 1.0, 36))
 	markers["gate"] = Vector3(0, 0, 32)
-	markers["command"] = Vector3(0, 0, 0)
-	markers["comms"] = Vector3(-20, 0, -14)
-	markers["server"] = Vector3(20, 0, -14)
+	markers["command"] = Vector3(0, 0, 8)
+	markers["comms"] = Vector3(-20, 0, -9)
+	markers["server"] = Vector3(20, 0, -9)
 	markers["extraction"] = Vector3(0, 0, -40)
 	markers["yard"] = Vector3(-22, 0, 22)
+	# Wave spawns sit in courtyards/door mouths, not inside hollow hulls.
+	markers["spawn_gate"] = Vector3(0, 1.0, 29)
+	markers["spawn_command"] = Vector3(0, 1.0, 9)
+	markers["spawn_server"] = Vector3(20, 1.0, -8)
+	markers["spawn_extraction"] = Vector3(0, 1.0, -36)
 
 
 func _env(root: Node3D) -> void:
@@ -124,8 +136,8 @@ func _cover(root: Node3D) -> void:
 
 
 func _interact_points(root: Node3D) -> void:
-	_station(root, "RestoreStation", Vector3(-20, 1.0, -10), "RESTORE SECURITY GRID")
-	_station(root, "CommandConsole", Vector3(0, 1.0, 4), "COMMAND CONSOLE")
+	# Sit in the Comms doorway so the interact ray is not buried in the hull.
+	_station(root, "RestoreStation", Vector3(-20, 1.0, -9.0), "RESTORE SECURITY GRID")
 
 
 func _station(root: Node3D, named: String, pos: Vector3, label: String) -> void:
@@ -154,18 +166,18 @@ func _station(root: Node3D, named: String, pos: Vector3, label: String) -> void:
 	body.global_position = pos
 
 
-func _nav(root: Node3D) -> void:
-	var region := NavigationRegion3D.new()
-	region.name = "NavRegion"
+func _bake_nav(region: NavigationRegion3D) -> void:
 	var mesh := NavigationMesh.new()
-	mesh.agent_radius = 0.4
-	mesh.agent_height = 1.8
+	mesh.cell_size = 0.25
+	mesh.cell_height = 0.25
+	mesh.agent_radius = 0.5
+	mesh.agent_height = 1.75
 	mesh.agent_max_climb = 0.5
-	mesh.parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	mesh.geometry_collision_mask = PhysLayers.WORLD | PhysLayers.COVER
 	region.navigation_mesh = mesh
-	root.add_child(region)
-	# Deferred collider bake avoids GPU mesh stall on Android.
-	region.bake_navigation_mesh(true)
+	# Unthreaded web export cannot bake on a worker thread.
+	region.bake_navigation_mesh(false)
 
 
 func _box(root: Node3D, named: String, pos: Vector3, size: Vector3, color: Color, layer: int) -> StaticBody3D:

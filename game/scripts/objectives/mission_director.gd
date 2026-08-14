@@ -40,12 +40,12 @@ func _process(delta: float) -> void:
 				EventBus.alarm_started.emit()
 				AudioDirector.radio("FURY FRONT: BREACH AT THE GATE. HOLD IRONFALL.")
 			_set_phase("checkpoint")
-			_wave(["sb_phantom", "sb_phantom"], "gate", "recruit")
+			_wave(["sb_phantom", "sb_phantom"], "spawn_gate", "recruit")
 		"checkpoint":
 			integrity -= 0.28 * delta
 			if _enemies() <= 0 or _elapsed > 42.0:
 				_set_phase("command")
-				_wave(["sb_phantom", "sb_phantom", "sb_enforcer"], "command", "trained")
+				_wave(["sb_phantom", "sb_phantom", "sb_enforcer"], "spawn_command", "trained")
 		"command":
 			integrity -= 0.42 * delta
 			if _enemies() <= 0 or _elapsed > 38.0:
@@ -58,11 +58,13 @@ func _process(delta: float) -> void:
 			integrity -= 0.38 * delta
 			if restored:
 				_set_phase("grid_up")
+			elif _elapsed > 8.0 and _elapsed < 8.05:
+				AudioDirector.radio("COMMS: Restore panel is at the Comms doorway. Hold E.")
 		"grid_up":
 			integrity = minf(100.0, integrity + 8.0 * delta)
 			if _elapsed > 2.5:
 				_set_phase("data_steal")
-				_wave(["sb_hacker", "sb_hacker", "sb_phantom"], "server", "trained")
+				_wave(["sb_hacker", "sb_hacker", "sb_phantom"], "spawn_server", "trained")
 		"data_steal":
 			if _hackers_alive():
 				transfer += 1.15 * delta
@@ -71,13 +73,13 @@ func _process(delta: float) -> void:
 			elif not _hackers_alive() and _elapsed > 1.5:
 				_set_phase("extraction")
 				_extract_s = 55.0
-				_wave(["sb_enforcer", "sb_phantom", "sb_hacker"], "extraction", "veteran")
+				_wave(["sb_enforcer", "sb_phantom", "sb_hacker"], "spawn_extraction", "veteran")
 		"extraction":
 			_extract_s = maxf(0.0, _extract_s - delta)
 			EventBus.extraction_changed.emit(_extract_s)
 			if _enemies() <= 1:
 				_set_phase("commander")
-				_wave(["sb_commander", "sb_enforcer"], "extraction", "elite")
+				_wave(["sb_commander", "sb_enforcer"], "spawn_extraction", "elite")
 			elif _extract_s <= 0.0:
 				_fail()
 		"commander":
@@ -185,7 +187,7 @@ func _wave(ids: Array, marker: String, skill: String) -> void:
 	for i in ids.size():
 		var e := Shadowbreaker.new()
 		_spawns.add_child(e)
-		e.global_position = origin + Vector3(randf_range(-4, 4), 1.0, randf_range(-4, 4))
+		e.global_position = origin + Vector3(randf_range(-2.2, 2.2), 0.0, randf_range(-2.2, 2.2))
 		var pts: Array[Vector3] = [
 			origin + Vector3(-7, 0, 0),
 			origin + Vector3(7, 0, 0),
@@ -224,7 +226,6 @@ func _on_restored(_id: String) -> void:
 func _win() -> void:
 	phase = "results"
 	GameState.mission_success = true
-	EventBus.extraction_changed.emit(0.0)
 	EventBus.mission_ended.emit(true)
 	set_process(false)
 

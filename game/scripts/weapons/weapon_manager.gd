@@ -70,8 +70,8 @@ func current() -> Dictionary:
 func tick(delta: float, firing: bool, ads: bool, move_vel: Vector3 = Vector3.ZERO) -> void:
 	var rec := deg_to_rad(float(current().get("recoil", {}).get("recoverDegPerSec", 11)))
 	recoil_pitch = move_toward(recoil_pitch, 0.0, rec * delta)
-	recoil_yaw = move_toward(recoil_yaw, 0.0, rec * 0.7 * delta)
-	_punch = _punch.move_toward(Vector3.ZERO, delta * 11.0)
+	recoil_yaw = move_toward(recoil_yaw, 0.0, rec * 0.55 * delta)
+	_punch = _punch.move_toward(Vector3.ZERO, delta * 8.5)
 	_sway_t += delta
 	if firing and not reloading:
 		_try_fire(ads)
@@ -88,9 +88,9 @@ func _pose(_delta: float, ads: bool, move_vel: Vector3) -> void:
 		sway *= 0.12
 	var rest := _hip.lerp(_ads, _ads_t)
 	if reloading:
-		rest += Vector3(0.04, -0.08, 0.05)
+		rest += Vector3(0.05, -0.11, 0.07)
 	_rig.position = rest + sway + _punch
-	_rig.rotation_degrees = Vector3(_punch.z * 40.0, sway.x * 20.0, sway.y * -18.0)
+	_rig.rotation_degrees = Vector3(_punch.z * 52.0, sway.x * 20.0, sway.y * -18.0)
 
 
 func _try_fire(ads: bool) -> void:
@@ -118,7 +118,7 @@ func _try_fire(ads: bool) -> void:
 	dir = _spread(dir, spread)
 	_hitscan.fire(w, cam.global_position, dir, _muzzle.global_position)
 	_kick(w)
-	_punch += Vector3(0.0, 0.006, 0.028)
+	_punch += Vector3(0.0, 0.012, 0.042)
 	AudioDirector.gunshot(str(w.get("audio", "")), cam.global_position)
 	VfxBus.muzzle(_muzzle.global_position, dir)
 	if GraphicsProfile.tier != GraphicsProfile.Tier.LOW:

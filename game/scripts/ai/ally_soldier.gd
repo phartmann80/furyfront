@@ -57,6 +57,12 @@ func _physics_process(delta: float) -> void:
 	elif GameState.objective_pos != Vector3.ZERO and player:
 		if player.global_position.distance_to(GameState.objective_pos) > 8.0:
 			dest = GameState.objective_pos
+	if player and enemy:
+		var fwd := -player.transform.basis.z
+		var to_me := global_position - player.global_position
+		to_me.y = 0.0
+		if to_me.length() > 0.08 and to_me.length() < 3.4 and fwd.dot(to_me.normalized()) > 0.55:
+			dest = _follow_point(player)
 	_move_to(dest)
 	move_and_slide()
 
@@ -79,9 +85,16 @@ func _move_to(dest: Vector3) -> void:
 		velocity.z = 0.0
 		return
 	var dir := to.normalized()
-	var speed := 4.6 if d > 8.0 else 3.6
+	var speed := 4.8 if d > 8.0 else 3.7
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
+	if is_on_wall():
+		var n := get_wall_normal()
+		n.y = 0.0
+		if n.length_squared() > 0.001:
+			var slide := Vector3(n.z, 0.0, -n.x)
+			velocity.x += slide.x * speed * 0.5
+			velocity.z += slide.z * speed * 0.5
 	if dir.length_squared() > 0.0001:
 		look_at(global_position + dir, Vector3.UP)
 

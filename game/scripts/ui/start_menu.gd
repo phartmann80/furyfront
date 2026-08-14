@@ -29,27 +29,42 @@ func _build() -> void:
 	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
 	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(catcher)
-	_label("FURY FRONT", Vector2(360, 168), Vector2(1200, 96), 72, Color(0.93, 0.62, 0.16), 14)
-	_label("PC WEB  ·  OPERATION: BROKEN PERIMETER  ·  IRONFALL DEPOT", Vector2(260, 268), Vector2(1400, 40), 18, Color(0.90, 0.88, 0.82), 7)
-	_label("WASD move  ·  Mouse look  ·  LMB fire  ·  RMB ADS  ·  R reload  ·  Shift sprint  ·  C crouch  ·  Space jump  ·  E interact", Vector2(80, 318), Vector2(1760, 36), 15, Color(0.82, 0.80, 0.74), 6)
+	_banner("FURY FRONT", 168.0, 96.0, 72, Color(0.93, 0.62, 0.16), 14)
+	_banner("PC WEB  ·  OPERATION: BROKEN PERIMETER  ·  IRONFALL DEPOT", 268.0, 40.0, 18, Color(0.90, 0.88, 0.82), 7)
+	_banner("WASD move  ·  Mouse look  ·  LMB fire  ·  RMB ADS  ·  R reload  ·  Shift sprint  ·  C crouch  ·  Space jump  ·  E interact", 318.0, 36.0, 15, Color(0.82, 0.80, 0.74), 6)
 	_quality_row()
+	var start_row := HBoxContainer.new()
+	start_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	start_row.anchor_left = 0.0
+	start_row.anchor_right = 1.0
+	start_row.anchor_top = 0.0
+	start_row.anchor_bottom = 0.0
+	start_row.offset_top = 548.0
+	start_row.offset_bottom = 626.0
+	add_child(start_row)
 	var start := Button.new()
 	start.text = "START OPERATION"
-	start.position = Vector2(710, 548)
-	start.size = Vector2(500, 78)
+	start.custom_minimum_size = Vector2(500, 78)
 	_apply_style(start, false, true)
 	start.pressed.connect(_start)
-	add_child(start)
+	start_row.add_child(start)
 	start.grab_focus()
-	_label("Click starts audio and mouse capture (browser requirement).", Vector2(360, 640), Vector2(1200, 32), 14, Color(0.72, 0.70, 0.64), 5)
+	_banner("Click starts audio and mouse capture (browser requirement).", 640.0, 32.0, 14, Color(0.72, 0.70, 0.64), 5)
 
 
-func _label(text: String, pos: Vector2, size: Vector2, font_size: int, color: Color, outline: int) -> Label:
+func _banner(text: String, top: float, height: float, font_size: int, color: Color, outline: int) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.position = pos
-	l.size = size
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.anchor_left = 0.0
+	l.anchor_right = 1.0
+	l.anchor_top = 0.0
+	l.anchor_bottom = 0.0
+	l.offset_left = 0.0
+	l.offset_right = 0.0
+	l.offset_top = top
+	l.offset_bottom = top + height
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02, 0.92))
@@ -64,14 +79,23 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _quality_row() -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 14)
+	row.anchor_left = 0.0
+	row.anchor_right = 1.0
+	row.anchor_top = 0.0
+	row.anchor_bottom = 0.0
+	row.offset_top = 430.0
+	row.offset_bottom = 480.0
+	add_child(row)
 	var labels := ["HIGH", "MEDIUM", "LOW"]
 	for i in 3:
 		var b := Button.new()
 		b.text = labels[i]
 		b.toggle_mode = true
 		b.button_pressed = i == _quality
-		b.position = Vector2(705 + i * 170, 430)
-		b.size = Vector2(156, 50)
+		b.custom_minimum_size = Vector2(156, 50)
 		var idx := i
 		b.pressed.connect(func() -> void:
 			_quality = idx
@@ -81,7 +105,7 @@ func _quality_row() -> void:
 			GraphicsProfile.set_named(["high", "medium", "low"][idx])
 		)
 		_apply_style(b, i == _quality, false)
-		add_child(b)
+		row.add_child(b)
 		_quality_buttons.append(b)
 
 

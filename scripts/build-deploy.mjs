@@ -28,6 +28,7 @@ const out = join(root, "dist", "furyfront");
 const site = join(root, "web", "site");
 const gameExport = join(root, "export", "web");
 const heroSrc = join(root, "assets", "hero-video", "hero.MP4");
+const heroStillSrc = join(root, "assets", "hero-still.png");
 const posterSrc = join(root, "assets", "breached_entrance.webp");
 
 const SKIP_EXPORT = process.argv.includes("--skip-export");
@@ -159,6 +160,7 @@ if (!SKIP_EXPORT) runGodotExport();
 requirePath(site, "site source");
 requirePath(join(site, "index.html"), "site index.html");
 requirePath(heroSrc, "hero video (assets/hero-video/hero.MP4)");
+requirePath(heroStillSrc, "hero still (assets/hero-still.png)");
 requirePath(posterSrc, "hero poster (assets/breached_entrance.webp)");
 requirePath(gameExport, "Godot export directory");
 requirePath(join(gameExport, "index.html"), "Godot export index.html");
@@ -173,6 +175,7 @@ cpSync(site, out, { recursive: true });
 const playOut = join(out, "play");
 copyGodotExport(playOut);
 cpSync(heroSrc, join(out, "media", "hero.MP4"));
+cpSync(heroStillSrc, join(out, "media", "hero-still.png"));
 cpSync(posterSrc, join(out, "media", "hero-poster.webp"));
 
 const godotSlug = versionGodotPlay(playOut, commit);

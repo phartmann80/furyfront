@@ -4,42 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Fury Front — premium tactical military FPS. Defend installations against Shadowbreaker infiltration.">
-  <meta name="theme-color" content="#0d0f12">
+  <meta name="theme-color" content="#0b0c0e">
   <title>Fury Front — Tactical Military FPS</title>
   <link rel="icon" href="/play/index.icon.png" type="image/png">
-  <link rel="preload" href="/media/hero-poster.webp" as="image" type="image/webp">
+  <link rel="preload" href="/media/hero-still.png" as="image" type="image/png">
   <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <span class="brand-mark">FURY FRONT</span>
-      <nav class="topnav" aria-label="Primary">
-        <a href="#about">About</a>
-        <a href="/play/" class="topnav-play">Play</a>
-      </nav>
-    </div>
-  </header>
-
   <main>
     <section class="hero" id="hero" aria-label="Fury Front cinematic hero">
-      <video
-        class="hero-video"
-        id="hero-video"
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-        poster="/media/hero-poster.webp"
-        aria-hidden="true"
+      <img
+        class="hero-art"
+        src="/media/hero-still.png"
+        width="1536"
+        height="1024"
+        alt=""
       >
-        <source src="/media/hero.MP4" type="video/mp4">
-      </video>
-      <div class="hero-poster" aria-hidden="true"></div>
-      <div class="hero-overlay" aria-hidden="true"></div>
-
-      <div class="hero-content">
+      <div class="hero-copy">
         <p class="hero-eyebrow">Tactical Military FPS</p>
         <h1 class="hero-title">FURY FRONT</h1>
         <p class="hero-tagline">
@@ -50,7 +31,7 @@
           <a href="/play/" class="btn btn-primary" id="play-btn">PLAY FURY FRONT</a>
           <button type="button" class="btn btn-secondary" id="watch-trailer">WATCH TRAILER</button>
         </div>
-        <p class="hero-note">Operation: Broken Perimeter · Ironfall Depot · PC Web</p>
+        <p class="hero-note">Operation: Broken Perimeter • Ironfall Depot • PC Web</p>
       </div>
     </section>
 
@@ -86,7 +67,7 @@
         controls
         playsinline
         preload="none"
-        poster="/media/hero-poster.webp"
+        poster="/media/hero-still.png"
       >
         <source src="/media/hero.MP4" type="video/mp4">
       </video>

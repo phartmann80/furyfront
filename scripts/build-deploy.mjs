@@ -64,7 +64,8 @@ function runValidate() {
 
 function runGodotExport() {
   console.log("→ Godot Web export");
-  execSync('godot --headless --path game --export-release Web export/web/index.html', {
+  mkdirSync(join(root, "export", "web"), { recursive: true });
+  execSync("godot --headless --path game --export-release Web ../export/web/index.html", {
     cwd: root,
     stdio: "inherit",
   });

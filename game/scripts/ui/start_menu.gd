@@ -2,7 +2,7 @@ extends CanvasLayer
 
 signal started
 
-const BG_PATH := "res://assets/ui/start_background.png"
+const BG_PATH := "res://assets/ui/start_background.jpg"
 
 var _quality: int = 1 # High=0 Medium=1 Low=2
 var _quality_buttons: Array[Button] = []

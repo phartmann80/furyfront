@@ -122,7 +122,7 @@ func _hitmarker(head: bool, killed: bool) -> void:
 	hit.color = Color(1, 0.75, 0.15, 1) if head else Color(1, 1, 1, 1)
 	if killed:
 		hit.color = Color(0.85, 0.15, 0.12, 1)
-	await get_tree().create_timer(0.08).timeout
+	await get_tree().create_timer(0.08, false).timeout
 	hit.color.a = 0
 
 

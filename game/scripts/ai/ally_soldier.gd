@@ -41,7 +41,7 @@ func setup(origin: Vector3, slot: int = 0) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if health.dead:
+	if health.dead or GameState.mission_over:
 		return
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta

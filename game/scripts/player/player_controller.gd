@@ -43,7 +43,7 @@ func _ready() -> void:
 	add_to_group("player")
 	collision_layer = PhysLayers.PLAYER
 	collision_mask = PhysLayers.WORLD | PhysLayers.ENEMY | PhysLayers.COVER
-	GameState.reset_combat()
+	GameState.reset_run()
 	health.setup(GameState.max_health, GameState.armor, "fury_front")
 	health.changed.connect(_on_health)
 	health.died.connect(_on_died)
@@ -52,7 +52,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _dead:
+	if _dead or GameState.mission_over:
 		return
 	_look(delta)
 	_move(delta)
@@ -67,7 +67,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("tactical"):
 		weapons.throw_tactical()
 	if Input.is_action_just_pressed("debug_reset"):
-		debug_reset()
+		respawn()
 	_interact()
 
 
@@ -201,7 +201,7 @@ func _interact() -> void:
 
 
 func take_hit(amount: float, _from: Vector3) -> void:
-	if GameState.debug_invuln:
+	if GameState.mission_over or GameState.debug_invuln:
 		return
 	health.apply_damage(amount)
 	GameState.health = health.health
@@ -218,16 +218,20 @@ func _on_health(h: int, a: int) -> void:
 func _on_died() -> void:
 	_dead = true
 	EventBus.player_died.emit()
-	await get_tree().create_timer(2.0).timeout
-	debug_reset()
+	await get_tree().create_timer(2.0, false).timeout
+	if not is_instance_valid(self) or GameState.mission_over or get_tree().paused:
+		return
+	respawn()
 
 
-func debug_reset() -> void:
+func respawn() -> void:
 	global_transform = GameState.spawn_xform
 	_dead = false
-	GameState.reset_combat()
+	GameState.reset_life()
 	health.setup(GameState.max_health, GameState.armor, "fury_front")
 	weapons.refill()
 	velocity = Vector3.ZERO
+	ads_t = 0.0
 	_land_ofs = 0.0
 	_bob_y = 0.0
+	_vaulting = false

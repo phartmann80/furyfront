@@ -151,7 +151,7 @@ func reload() -> void:
 	var ms := float(w.get("reloadMs", 1800))
 	if mag <= 0:
 		ms = float(w.get("reloadEmptyMs", ms))
-	await get_tree().create_timer(ms / 1000.0).timeout
+	await get_tree().create_timer(ms / 1000.0, false).timeout
 	if not is_instance_valid(self):
 		return
 	var need := cap - mag
@@ -235,7 +235,7 @@ func _spawn_thrown(kind: String) -> void:
 	body.global_position = cam.global_position + -cam.global_transform.basis.z * 0.8
 	get_tree().current_scene.add_child(body)
 	body.apply_impulse(-cam.global_transform.basis.z * 12.0 + Vector3.UP * 2.0)
-	await get_tree().create_timer(1.6 if kind == "frag" else 0.5).timeout
+	await get_tree().create_timer(1.6 if kind == "frag" else 0.5, false).timeout
 	if is_instance_valid(body):
 		if kind == "frag":
 			_explode(body.global_position)

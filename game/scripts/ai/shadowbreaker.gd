@@ -18,6 +18,10 @@ var _fire_t := 0.0
 var _reposition_t := 0.0
 var _state_t := 0.0
 var _stuck_t := 0.0
+var _repath_t := 0.0
+var _repath_interval := 0.32
+var _queued_nav := Vector3.ZERO
+var _has_queued_nav := false
 var _agent: NavigationAgent3D
 var health: HealthComponent
 var _weapon: Dictionary = {}
@@ -42,8 +46,10 @@ func setup(id: String, skill_name: String, points: Array[Vector3]) -> void:
 	_agent.avoidance_enabled = not OS.has_feature("web")
 	add_child(_agent)
 	_make_body()
+	# Stagger repaths so a wave does not rebuild nav in the same physics frame.
+	_repath_interval = 0.28 + randf() * 0.12
 	if not patrol_points.is_empty():
-		_agent.target_position = patrol_points[0]
+		_set_nav_target(patrol_points[0], true)
 
 
 func _make_body() -> void:
@@ -94,11 +100,12 @@ func _hitbox(group: String, pos: Vector3, r: float, layer: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if health.dead:
+	if health.dead or GameState.mission_over:
 		return
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	_state_t += delta
+	_flush_nav(delta)
 	var player := _player()
 	var sees := player != null and _can_see(player)
 	if sees:
@@ -128,12 +135,14 @@ func _patrol() -> void:
 		return
 	if global_position.distance_to(patrol_points[patrol_i]) < 1.4:
 		patrol_i = (patrol_i + 1) % patrol_points.size()
-	_agent.target_position = patrol_points[patrol_i]
+		_set_nav_target(patrol_points[patrol_i], true)
+	else:
+		_set_nav_target(patrol_points[patrol_i])
 
 
 func _go_lkp() -> void:
 	if has_lkp:
-		_agent.target_position = last_known
+		_set_nav_target(last_known)
 
 
 func _engage(delta: float, player: Node3D, sees: bool) -> void:
@@ -155,16 +164,16 @@ func _engage(delta: float, player: Node3D, sees: bool) -> void:
 		if def.get("hacksObjectives", false) and dist > 11.0:
 			var servers := get_tree().get_nodes_in_group("objective_server")
 			if servers.size() > 0 and servers[0] is Node3D:
-				_agent.target_position = (servers[0] as Node3D).global_position
+				_set_nav_target((servers[0] as Node3D).global_position, true)
 				_set_state(State.ENGAGE)
 		elif randf() < flank_bias:
-			_agent.target_position = _cover_or_flank(player, true)
+			_set_nav_target(_cover_or_flank(player, true), true)
 			_set_state(State.FLANK)
 		else:
-			_agent.target_position = _cover_or_flank(player, false)
+			_set_nav_target(_cover_or_flank(player, false), true)
 			_set_state(State.COVER)
 	if archetype_id == "sb_enforcer" and dist > 10.0:
-		_agent.target_position = player.global_position + player.transform.basis.x * 2.5
+		_set_nav_target(player.global_position + player.transform.basis.x * 2.5)
 	if archetype_id == "sb_phantom":
 		_guard_hacker(player)
 	_fire_t -= delta
@@ -175,8 +184,6 @@ func _engage(delta: float, player: Node3D, sees: bool) -> void:
 			acc *= 1.12
 		if randf() <= acc:
 			_shoot(player)
-		if randf() < float(skill.get("grenadeChance", 0.1)) and dist < 18.0:
-			EventBus.notify.emit("Shadowbreaker grenade!")
 
 
 func _cover_or_flank(player: Node3D, flank: bool) -> Vector3:
@@ -215,7 +222,7 @@ func _guard_hacker(player: Node3D) -> void:
 			var h := n as Node3D
 			var mid := h.global_position.lerp(player.global_position, 0.35)
 			if global_position.distance_to(h.global_position) > 8.0:
-				_agent.target_position = mid
+				_set_nav_target(mid)
 			return
 
 
@@ -241,7 +248,7 @@ func _shoot(player: Node3D) -> void:
 
 func _retreat() -> void:
 	if not patrol_points.is_empty():
-		_agent.target_position = patrol_points[0]
+		_set_nav_target(patrol_points[0], true)
 
 
 func _steer(_delta: float) -> void:
@@ -282,7 +289,7 @@ func _steer(_delta: float) -> void:
 		if horiz.length() < 0.25 and dir.length() > 1.6:
 			_stuck_t += _delta
 			if _stuck_t > 0.7:
-				_agent.target_position = global_position + Vector3(randf_range(-5.0, 5.0), 0.0, randf_range(-5.0, 5.0))
+				_set_nav_target(global_position + Vector3(randf_range(-5.0, 5.0), 0.0, randf_range(-5.0, 5.0)), true)
 				_stuck_t = 0.0
 		else:
 			_stuck_t = 0.0
@@ -328,6 +335,8 @@ func hear_event(pos: Vector3) -> void:
 
 
 func receive_hit(amount: float, hitbox: String, from: Vector3) -> Dictionary:
+	if GameState.mission_over or health.dead:
+		return { "applied": 0, "killed": false, "to_armor": 0, "to_health": 0, "id": archetype_id, "hitbox": hitbox }
 	last_known = from
 	has_lkp = true
 	_set_state(State.ENGAGE)
@@ -335,6 +344,30 @@ func receive_hit(amount: float, hitbox: String, from: Vector3) -> Dictionary:
 	out["id"] = archetype_id
 	out["hitbox"] = hitbox
 	return out
+
+
+func _set_nav_target(pos: Vector3, force: bool = false) -> void:
+	if _agent == null:
+		return
+	if force:
+		_agent.target_position = pos
+		_repath_t = _repath_interval
+		_has_queued_nav = false
+		return
+	if _agent.target_position.distance_squared_to(pos) < 0.12:
+		return
+	_queued_nav = pos
+	_has_queued_nav = true
+
+
+func _flush_nav(delta: float) -> void:
+	_repath_t = maxf(0.0, _repath_t - delta)
+	if not _has_queued_nav or _repath_t > 0.0:
+		return
+	if _agent.target_position.distance_squared_to(_queued_nav) >= 0.12:
+		_agent.target_position = _queued_nav
+	_repath_t = _repath_interval
+	_has_queued_nav = false
 
 
 func _set_state(s: State) -> void:
@@ -358,5 +391,5 @@ func _player() -> Node3D:
 
 func _die() -> void:
 	collision_layer = 0
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(2.5, false).timeout
 	queue_free()

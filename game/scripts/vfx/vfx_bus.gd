@@ -8,7 +8,7 @@ func muzzle(pos: Vector3, _dir: Vector3) -> void:
 	l.shadow_enabled = false
 	get_tree().current_scene.add_child(l)
 	l.global_position = pos
-	await get_tree().create_timer(0.045).timeout
+	await get_tree().create_timer(0.045, false).timeout
 	if is_instance_valid(l):
 		l.queue_free()
 
@@ -71,7 +71,7 @@ func tracer(from: Vector3, to: Vector3) -> void:
 	imesh.surface_add_vertex(from)
 	imesh.surface_add_vertex(from.lerp(to, 0.92))
 	imesh.surface_end()
-	await get_tree().create_timer(0.04).timeout
+	await get_tree().create_timer(0.04, false).timeout
 	if is_instance_valid(im):
 		im.queue_free()
 
@@ -95,7 +95,7 @@ func impact(pos: Vector3, normal: Vector3, flesh: bool = false) -> void:
 	mi.global_position = pos + normal * 0.02
 	if normal.length_squared() > 0.001:
 		mi.look_at(pos + normal, Vector3.UP)
-	await get_tree().create_timer(0.35 if flesh else 8.0).timeout
+	await get_tree().create_timer(0.35 if flesh else 8.0, false).timeout
 	if is_instance_valid(mi):
 		mi.queue_free()
 
@@ -107,7 +107,7 @@ func explosion(pos: Vector3) -> void:
 	l.omni_range = 8.0
 	get_tree().current_scene.add_child(l)
 	l.global_position = pos
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(0.2, false).timeout
 	if is_instance_valid(l):
 		l.queue_free()
 
@@ -125,7 +125,7 @@ func smoke(pos: Vector3) -> void:
 	mi.add_to_group("smoke_volume")
 	get_tree().current_scene.add_child(mi)
 	mi.global_position = pos + Vector3.UP
-	await get_tree().create_timer(9.5).timeout
+	await get_tree().create_timer(9.5, false).timeout
 	if is_instance_valid(mi):
 		mi.queue_free()
 

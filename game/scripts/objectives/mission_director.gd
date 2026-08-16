@@ -10,6 +10,7 @@ var _spawns: Node
 var _elapsed := 0.0
 var _extract_s := 0.0
 var _alarmed := false
+var _comms_hint_played := false
 
 func start(world: Node, markers: Dictionary) -> void:
 	map = markers
@@ -58,7 +59,8 @@ func _process(delta: float) -> void:
 			integrity -= 0.38 * delta
 			if restored:
 				_set_phase("grid_up")
-			elif _elapsed > 8.0 and _elapsed < 8.05:
+			elif not _comms_hint_played and _elapsed >= 8.0:
+				_comms_hint_played = true
 				AudioDirector.radio("COMMS: Restore panel is at the Comms doorway. Hold E.")
 		"grid_up":
 			integrity = minf(100.0, integrity + 8.0 * delta)
@@ -226,6 +228,7 @@ func _on_restored(_id: String) -> void:
 func _win() -> void:
 	phase = "results"
 	GameState.mission_success = true
+	GameState.mission_over = true
 	EventBus.mission_ended.emit(true)
 	set_process(false)
 
@@ -233,6 +236,7 @@ func _win() -> void:
 func _fail() -> void:
 	phase = "results"
 	GameState.mission_success = false
+	GameState.mission_over = true
 	EventBus.mission_ended.emit(false)
 	EventBus.objective_changed.emit("MISSION FAILED")
 	EventBus.briefing_changed.emit("The depot is lost. Integrity collapsed or the packet left Ironfall.")

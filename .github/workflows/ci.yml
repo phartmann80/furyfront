@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Canonical data validation
+        run: node scripts/validate.mjs
+      - name: Shared combat math
+        run: node --experimental-strip-types packages/shared/src/combat.test.ts
+
+  godot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.1
+          use-dotnet: false
+      - name: Import project
+        run: godot --headless --path game --import --quit
+      - name: Combat math tests
+        run: godot --headless --path game --script res://tests/run_tests.gd
+      - name: Mission slice
+        run: godot --headless --path game res://tests/mission_slice.tscn

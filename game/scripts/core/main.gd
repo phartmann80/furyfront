@@ -72,12 +72,13 @@ func _cine_seq() -> void:
 		if cinematic == null:
 			return
 		cinematic.text = line
-		await get_tree().create_timer(2.2).timeout
+		await get_tree().create_timer(2.2, false).timeout
 	if cinematic:
 		cinematic.visible = false
 
 
 func _on_mission_ended(ok: bool) -> void:
 	var rs := ResultsScreen.new()
+	rs.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(rs)
 	rs.show_results(ok)

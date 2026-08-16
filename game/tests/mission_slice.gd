@@ -31,6 +31,13 @@ func _ready() -> void:
 	if md.phase != "cinematic":
 		fail.append("mission did not start cinematic")
 	md._set_phase("engineer")
+	md.restored = false
+	if md._comms_hint_played:
+		fail.append("comms hint started already played")
+	md._elapsed = 9.0
+	md._process(0.2)
+	if not md._comms_hint_played:
+		fail.append("comms hint did not fire after 8s")
 	md._on_restored("RestoreStation")
 	md._process(0.05)
 	if md.phase != "grid_up":
@@ -56,6 +63,26 @@ func _ready() -> void:
 	md._process(0.05)
 	if md.phase != "results" or not GameState.mission_success:
 		fail.append("mission did not win")
+	GameState.kills = 7
+	var clock := GameState.mission_clock
+	GameState.reset_life()
+	if GameState.kills != 7 or GameState.mission_clock != clock or not GameState.mission_success:
+		fail.append("reset_life wiped run stats")
+	if GameState.health != GameState.max_health:
+		fail.append("reset_life did not restore health")
+	var rs := ResultsScreen.new()
+	add_child(rs)
+	rs.show_results(true)
+	if not get_tree().paused:
+		fail.append("results did not pause the tree")
+	if rs.process_mode != Node.PROCESS_MODE_ALWAYS:
+		fail.append("results must keep processing while paused")
+	if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		fail.append("results did not release pointer lock")
+	get_tree().paused = false
+	GameState.reset_run()
+	if GameState.kills != 0 or GameState.mission_clock != 0.0 or GameState.mission_success or GameState.mission_over:
+		fail.append("reset_run did not clear a full restart")
 	if not fail.is_empty():
 		push_error("MISSION SLICE FAIL\n" + "\n".join(fail))
 		get_tree().quit(1)

@@ -63,16 +63,6 @@ func is_crouch() -> bool:
 	return crouch_held or Input.is_action_pressed("crouch")
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		touch_look += event.relative
-	if event.is_action_pressed("ui_cancel"):
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		else:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
-
 func consume_look() -> Vector2:
 	var d := touch_look * _look_sens
 	touch_look = Vector2.ZERO
@@ -82,7 +72,25 @@ func consume_look() -> Vector2:
 func capture_mouse() -> void:
 	if OS.has_feature("mobile"):
 		return
+	if get_tree() != null and get_tree().paused:
+		return
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func release_mouse() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if get_tree() != null and get_tree().paused:
+		return
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		touch_look += event.relative
+	if event.is_action_pressed("ui_cancel"):
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _key(action: String, key: Key) -> void:

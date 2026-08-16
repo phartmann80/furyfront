@@ -1,6 +1,8 @@
 class_name IronfallBuilder
 extends RefCounted
 
+const _DepotKit := preload("res://scripts/maps/depot_kit.gd")
+
 var markers: Dictionary = {}
 
 func build(root: Node3D) -> void:
@@ -32,6 +34,7 @@ func build(root: Node3D) -> void:
 	_underground(geo)
 	_cover(geo)
 	_interact_points(root)
+	_DepotKit.new().decorate_gate(root)
 	_bake_nav(geo)
 	markers["staging"] = Transform3D(Basis.IDENTITY, Vector3(0, 1.0, 36))
 	markers["gate"] = Vector3(0, 0, 32)

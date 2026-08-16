@@ -2,6 +2,8 @@
 
 Date: 2026-08-16
 
+**V0.1 is complete for engineering purposes.** Production commit **`000fc959a15e869d675cadf0be5b8bad2169aa03`** is accepted. Keep `/var/www/furyfront/releases/866893a` as the rollback point. Visual work continues in `docs/24-visual-benchmark-02.md`.
+
 ## Platform mandate
 
 **PC web first.** Godot 4.7.1.stable, Compatibility renderer, unthreaded web export.
@@ -51,7 +53,7 @@ Recreated on `fix/v01-broken-perimeter-stabilization` from `866893a`. Not produc
 
 ## Remaining gameplay blockers
 
-1. Manual playtest of the full mission on HTTPS `/play/`
+1. Manual playtest of the full mission on HTTPS `/play/` (still open; blockers outrank 0.2 art)
 2. Measure combat FPS / memory on a gaming PC (not empty spawn)
-3. KF-16 is still CSG boxes — readable, not production art
+3. Production GLB for Assault / arms / KF-16 / Phantom waits on Visual Benchmark 0.2 approval and Meshy credit confirmation
 4. AI cover uses crate positions; no lean/peek animation

@@ -26,7 +26,7 @@ Production matrix. Formats: glTF/GLB source → Godot scenes. Textures: 2K deskt
 | Ability VFX | 2–4 |
 | VO lines | ~80 |
 
-LOD0 ≤ 40k tris, LOD3 ≤ 4k. Capsule hitbox standard.
+LOD0 ≤ 40k tris, LOD3 ≤ 4k. Capsule hitbox standard. **Web V0.2 import gate is stricter:** see `docs/23-v02-performance-budget.md` (Assault LOD0 ≤ 25k).
 
 ## Weapons (each)
 

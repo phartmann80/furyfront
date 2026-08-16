@@ -7,6 +7,8 @@ var particle_scale: float = 1.0
 var shadow_enabled: bool = true
 var decal_enabled: bool = true
 var scaling_3d: float = 1.0
+var particle_cap: int = 400
+var max_local_lights: int = 4
 
 func _ready() -> void:
 	if OS.has_feature("web"):
@@ -36,18 +38,24 @@ func apply() -> void:
 			shadow_enabled = true
 			decal_enabled = true
 			scaling_3d = 1.0
+			particle_cap = 800
+			max_local_lights = 6
 			Engine.max_fps = 60
 		Tier.MEDIUM:
 			particle_scale = 0.65
 			shadow_enabled = true
 			decal_enabled = true
 			scaling_3d = 0.85
+			particle_cap = 400
+			max_local_lights = 4
 			Engine.max_fps = 60
 		Tier.LOW:
 			particle_scale = 0.35
 			shadow_enabled = false
 			decal_enabled = false
 			scaling_3d = 0.7
+			particle_cap = 80
+			max_local_lights = 2
 			Engine.max_fps = 60
 	var vp := get_viewport()
 	if vp:

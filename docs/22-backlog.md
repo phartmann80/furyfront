@@ -24,8 +24,8 @@ The hero still, branding, PLAY FURY FRONT, and trailer modal stay as-is until th
 
 ## Active product priority
 
-Build the game behind PLAY FURY FRONT (`/play/`).
+V0.1 gameplay is **accepted** (production `000fc95`). Active work is **Visual Benchmark 0.2** — see `docs/24-visual-benchmark-02.md` and `docs/23-v02-performance-budget.md`.
 
-Order: **movement → KF-16 gunplay → Shadowbreaker AI → Ironfall Depot → Broken Perimeter → VFX/audio → polish → web performance.**
+Human playtest of https://furyfront.app/play/ stays open. Genuine blockers outrank art.
 
-Do not expand into BR, DMZ, ranked, store, battle pass, 27 weapons, 12 operators, or eight maps until the first mission is fun.
+Do not expand into BR, DMZ, ranked, store, battle pass, 27 weapons, 12 operators, or eight maps. Ironfall Depot and Broken Perimeter look and feel first.

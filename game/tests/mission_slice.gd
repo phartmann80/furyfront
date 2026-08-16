@@ -10,8 +10,8 @@ func _ready() -> void:
 	builder.build(world)
 	if world.get_node_or_null("ServerIntel") == null:
 		fail.append("ServerIntel marker missing")
-	if world.get_node_or_null("RestoreStation") == null:
-		fail.append("RestoreStation missing")
+	if world.get_node_or_null("GateKit") == null:
+		fail.append("GateKit visual sample missing")
 	var region := world.get_node_or_null("NavRegion") as NavigationRegion3D
 	if region == null or region.navigation_mesh == null or region.navigation_mesh.get_polygon_count() < 4:
 		fail.append("navmesh did not bake walkable polygons")

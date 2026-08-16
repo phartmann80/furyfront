@@ -31,6 +31,8 @@ node ../scripts/validate.mjs
 
 Android/iOS native export is **not** this milestone. Touch controls remain in the project.
 
-V0.1 is a **graybox** FPS: primitives, procedural audio, Operation: Broken Perimeter. It is not a finished game.
+The Web export used to scan a leftover **Android** preset with `gradle_build/use_gradle_build=true`. That probe printed `Unable to open Android 'build-tools' directory` even though the shipped target is Web. The Android preset is removed from `export_presets.cfg`. Do **not** install the Android SDK to silence a Web build.
+
+V0.1 is the accepted graybox FPS. Visual Benchmark 0.2 (`docs/24-visual-benchmark-02.md`) upgrades presentation without changing modes. Performance budgets: `docs/23-v02-performance-budget.md`.
 
 Hosting headers: `docs/20-web-hosting.md`.

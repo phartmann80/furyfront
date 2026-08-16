@@ -1,6 +1,8 @@
 class_name PlayerFactory
 extends RefCounted
 
+const _FpsArms := preload("res://scripts/player/fps_arms.gd")
+
 static func spawn(parent: Node, xform: Transform3D) -> PlayerController:
 	var p := PlayerController.new()
 	p.name = "Player"
@@ -31,6 +33,9 @@ static func spawn(parent: Node, xform: Transform3D) -> PlayerController:
 	var wm := WeaponManager.new()
 	wm.name = "WeaponManager"
 	cam.add_child(wm)
+	var arms = _FpsArms.new()
+	arms.name = "FpsArms"
+	cam.add_child(arms)
 	var vault := RayCast3D.new()
 	vault.name = "VaultRay"
 	vault.target_position = Vector3(0, 0, -1.1)

@@ -21,6 +21,7 @@ const HEAD_CROUCH_Y := 1.05
 @onready var interact_ray: RayCast3D = $Head/Camera3D/InteractRay
 @onready var vault_ray: RayCast3D = $VaultRay
 @onready var weapons: WeaponManager = $Head/Camera3D/WeaponManager
+@onready var arms = $Head/Camera3D/FpsArms
 @onready var health: HealthComponent = $HealthComponent
 
 var yaw := 0.0
@@ -37,6 +38,7 @@ var _bob_y := 0.0
 var _land_ofs := 0.0
 var _was_air := false
 var _step_t := 0.0
+var _sprinting := false
 
 
 func _ready() -> void:
@@ -57,11 +59,15 @@ func _physics_process(delta: float) -> void:
 	_look(delta)
 	_move(delta)
 	_ads(delta)
-	weapons.tick(delta, InputService.is_fire(), InputService.is_ads(), velocity)
+	weapons.tick(delta, InputService.is_fire(), InputService.is_ads(), velocity, _sprinting)
+	if arms and arms.has_method("pose"):
+		arms.pose(delta, ads_t, _sprinting, weapons.reloading, Vector3(velocity.x, 0.0, velocity.z).length(), weapons.punch)
 	if Input.is_action_just_pressed("reload"):
 		weapons.reload()
 	if Input.is_action_just_pressed("weapon_next"):
 		weapons.cycle()
+		if arms and arms.has_method("notify_switch"):
+			arms.notify_switch()
 	if Input.is_action_just_pressed("grenade"):
 		weapons.throw_grenade()
 	if Input.is_action_just_pressed("tactical"):
@@ -119,7 +125,8 @@ func _move(delta: float) -> void:
 
 	var w := weapons.current()
 	var speed := WALK * float(w.get("move", 1.0))
-	var sprinting := InputService.is_sprint() and not InputService.is_ads() and not crouching and dir.dot(-transform.basis.z) > 0.15
+	_sprinting = InputService.is_sprint() and not InputService.is_ads() and not crouching and dir.dot(-transform.basis.z) > 0.15
+	var sprinting := _sprinting
 	if sprinting:
 		speed = SPRINT * float(w.get("move", 1.0))
 	if crouching:

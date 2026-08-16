@@ -55,17 +55,19 @@ func setup(id: String, skill_name: String, points: Array[Vector3]) -> void:
 func _make_body() -> void:
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
-	cap.radius = 0.38
-	cap.height = 1.8
+	var radius := 0.32 if archetype_id == "sb_phantom" else 0.38
+	var height := 1.72 if archetype_id == "sb_phantom" else 1.8
+	cap.radius = radius
+	cap.height = height
 	col.shape = cap
-	col.position = Vector3(0, 0.9, 0)
+	col.position = Vector3(0, height * 0.5, 0)
 	add_child(col)
 	var mi := MeshInstance3D.new()
 	var cm := CapsuleMesh.new()
-	cm.radius = 0.38
-	cm.height = 1.8
+	cm.radius = radius
+	cm.height = height
 	mi.mesh = cm
-	mi.position = Vector3(0, 0.9, 0)
+	mi.position = Vector3(0, height * 0.5, 0)
 	var mat := StandardMaterial3D.new()
 	match archetype_id:
 		"sb_hacker":
@@ -76,11 +78,40 @@ func _make_body() -> void:
 		"sb_commander":
 			mat.albedo_color = Color(0.45, 0.12, 0.12)
 		_:
-			mat.albedo_color = Color(0.12, 0.14, 0.18)
+			mat.albedo_color = Color(0.1, 0.12, 0.16)
+			mat.metallic = 0.35
+			mat.roughness = 0.42
 	mi.material_override = mat
 	add_child(mi)
-	_hitbox("hit_head", Vector3(0, 1.62, 0), 0.16, 8)
+	if archetype_id == "sb_phantom":
+		_phantom_kit(height)
+	_hitbox("hit_head", Vector3(0, height * 0.9, 0), 0.16 if archetype_id != "sb_phantom" else 0.14, 8)
 	_hitbox("hit_limb", Vector3(0.22, 0.4, 0), 0.14, 16)
+
+
+func _phantom_kit(height: float) -> void:
+	var visor := MeshInstance3D.new()
+	var vb := BoxMesh.new()
+	vb.size = Vector3(0.28, 0.08, 0.18)
+	visor.mesh = vb
+	visor.position = Vector3(0, height * 0.82, -0.22)
+	var vm := StandardMaterial3D.new()
+	vm.albedo_color = Color(0.04, 0.08, 0.1)
+	vm.emission_enabled = true
+	vm.emission = Color(0.12, 0.55, 0.62)
+	vm.emission_energy_multiplier = 1.6
+	visor.material_override = vm
+	add_child(visor)
+	var pack := MeshInstance3D.new()
+	var pb := BoxMesh.new()
+	pb.size = Vector3(0.22, 0.28, 0.1)
+	pack.mesh = pb
+	pack.position = Vector3(0, height * 0.55, 0.28)
+	var pm := StandardMaterial3D.new()
+	pm.albedo_color = Color(0.08, 0.1, 0.12)
+	pm.metallic = 0.45
+	pack.material_override = pm
+	add_child(pack)
 
 
 func _hitbox(group: String, pos: Vector3, r: float, layer: int) -> void:

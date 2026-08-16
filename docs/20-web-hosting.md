@@ -23,7 +23,7 @@ Do not embed marketing website UI inside the Godot runtime.
 | `Content-Type` `.wasm` | `application/wasm` | Browser instantiate |
 | `Content-Type` `.js` | `application/javascript` | Engine loader |
 | `Content-Type` `.pck` | `application/octet-stream` | Game pack |
-| `Content-Type` `.mp4` | `video/mp4` | Hero cinematic |
+| `Content-Type` `.mp4` | `video/mp4` via `/etc/nginx/mime.types` | Hero cinematic. Do **not** redeclare `mp4` under `location /media/` (duplicate extension warning). |
 | `Cache-Control` `index.html` | `no-cache` | Versioning |
 | `Cache-Control` wasm/pck/js (versioned) | `public, max-age=31536000, immutable` | Only for `/play/index.<commit>.*` |
 | `Cache-Control` `/health`, `version.json` | `no-cache, must-revalidate` | Commit + deployedAt |

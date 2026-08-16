@@ -12,12 +12,15 @@ var _last_fire := -999.0
 var _pattern_i := 0
 var _rig: Node3D
 var _muzzle: Marker3D
+var _shell: Marker3D
+var _mag: MeshInstance3D
 var _hitscan: HitscanSystem
 var _ads_t := 0.0
-var _punch := Vector3.ZERO
+var punch := Vector3.ZERO
 var _sway_t := 0.0
 var _hip := Vector3(0.22, -0.19, -0.40)
 var _ads := Vector3(0.0, -0.135, -0.36)
+var _sprint := Vector3(0.28, -0.28, -0.22)
 
 func setup(weapon_ids: Array) -> void:
 	ids.clear()
@@ -33,21 +36,29 @@ func _build_kf16() -> void:
 	_rig = Node3D.new()
 	_rig.name = "Kf16Rig"
 	add_child(_rig)
-	_part(_rig, Vector3(0.055, 0.085, 0.30), Vector3(0, 0.01, 0.02), Color(0.12, 0.13, 0.14))
-	_part(_rig, Vector3(0.028, 0.028, 0.34), Vector3(0, 0.03, -0.28), Color(0.18, 0.19, 0.20))
-	_part(_rig, Vector3(0.04, 0.055, 0.16), Vector3(0, 0.0, 0.22), Color(0.10, 0.11, 0.12))
-	_part(_rig, Vector3(0.032, 0.11, 0.055), Vector3(0, -0.085, 0.0), Color(0.16, 0.14, 0.11))
-	_part(_rig, Vector3(0.03, 0.09, 0.04), Vector3(0, -0.09, 0.10), Color(0.11, 0.11, 0.12))
-	_part(_rig, Vector3(0.02, 0.04, 0.08), Vector3(0, 0.06, -0.08), Color(0.08, 0.08, 0.09))
-	_part(_rig, Vector3(0.05, 0.05, 0.26), Vector3(0.07, -0.07, 0.14), Color(0.42, 0.32, 0.22))
-	_part(_rig, Vector3(0.045, 0.045, 0.20), Vector3(-0.05, -0.03, -0.06), Color(0.40, 0.30, 0.20))
+	# Placeholder KF-16: named parts + attachment points. Stats stay in weapons.json.
+	_part(_rig, Vector3(0.052, 0.078, 0.28), Vector3(0, 0.012, 0.04), Color(0.11, 0.12, 0.13), 0.62) # receiver
+	_part(_rig, Vector3(0.046, 0.038, 0.22), Vector3(0, 0.008, -0.18), Color(0.14, 0.15, 0.16), 0.5) # handguard
+	_part(_rig, Vector3(0.022, 0.022, 0.30), Vector3(0, 0.028, -0.38), Color(0.2, 0.2, 0.21), 0.75) # barrel
+	_part(_rig, Vector3(0.034, 0.034, 0.05), Vector3(0, 0.028, -0.54), Color(0.16, 0.16, 0.17), 0.7) # muzzle
+	_part(_rig, Vector3(0.038, 0.05, 0.14), Vector3(0, 0.0, 0.22), Color(0.09, 0.09, 0.1), 0.45) # stock tube
+	_part(_rig, Vector3(0.03, 0.1, 0.048), Vector3(0, -0.082, 0.02), Color(0.15, 0.13, 0.1), 0.2) # pistol grip
+	_part(_rig, Vector3(0.018, 0.036, 0.07), Vector3(0, 0.062, -0.06), Color(0.07, 0.08, 0.08), 0.3) # optic
+	_part(_rig, Vector3(0.028, 0.018, 0.04), Vector3(0, 0.084, -0.05), Color(0.05, 0.06, 0.07), 0.15) # sight window
+	_mag = _part(_rig, Vector3(0.028, 0.11, 0.05), Vector3(0, -0.09, -0.02), Color(0.1, 0.11, 0.1), 0.35)
+	_mag.name = "Magazine"
 	_muzzle = Marker3D.new()
-	_muzzle.position = Vector3(0.0, 0.03, -0.48)
+	_muzzle.name = "MuzzleFlash"
+	_muzzle.position = Vector3(0.0, 0.028, -0.58)
 	_rig.add_child(_muzzle)
+	_shell = Marker3D.new()
+	_shell.name = "ShellEject"
+	_shell.position = Vector3(0.04, 0.04, -0.04)
+	_rig.add_child(_shell)
 	_rig.position = _hip
 
 
-func _part(parent: Node3D, size: Vector3, pos: Vector3, color: Color) -> void:
+func _part(parent: Node3D, size: Vector3, pos: Vector3, color: Color, metallic: float = 0.45) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = size
@@ -55,10 +66,11 @@ func _part(parent: Node3D, size: Vector3, pos: Vector3, color: Color) -> void:
 	mi.position = pos
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
-	mat.metallic = 0.45
-	mat.roughness = 0.4
+	mat.metallic = metallic
+	mat.roughness = 0.38
 	mi.material_override = mat
 	parent.add_child(mi)
+	return mi
 
 
 func current() -> Dictionary:
@@ -67,30 +79,36 @@ func current() -> Dictionary:
 	return ContentCatalog.get_weapon(ids[idx])
 
 
-func tick(delta: float, firing: bool, ads: bool, move_vel: Vector3 = Vector3.ZERO) -> void:
+func tick(delta: float, firing: bool, ads: bool, move_vel: Vector3 = Vector3.ZERO, sprinting: bool = false) -> void:
 	var rec := deg_to_rad(float(current().get("recoil", {}).get("recoverDegPerSec", 11)))
 	recoil_pitch = move_toward(recoil_pitch, 0.0, rec * delta)
 	recoil_yaw = move_toward(recoil_yaw, 0.0, rec * 0.55 * delta)
-	_punch = _punch.move_toward(Vector3.ZERO, delta * 8.5)
+	punch = punch.move_toward(Vector3.ZERO, delta * 8.5)
 	_sway_t += delta
 	if firing and not reloading:
 		_try_fire(ads)
-	_pose(delta, ads, move_vel)
+	_pose(delta, ads, move_vel, sprinting)
 
 
-func _pose(_delta: float, ads: bool, move_vel: Vector3) -> void:
+func _pose(_delta: float, ads: bool, move_vel: Vector3, sprinting: bool = false) -> void:
 	if _rig == null:
 		return
 	var speed := Vector3(move_vel.x, 0.0, move_vel.z).length()
-	var idle := 0.35 if speed < 0.4 else 1.0
+	var idle := 0.28 if speed < 0.4 else 1.0
 	var sway := Vector3(sin(_sway_t * 1.15) * 0.006, cos(_sway_t * 0.9) * 0.004, 0.0) * idle
 	if ads:
 		sway *= 0.12
 	var rest := _hip.lerp(_ads, _ads_t)
+	if sprinting and _ads_t < 0.2:
+		rest = rest.lerp(_sprint, 0.85)
 	if reloading:
 		rest += Vector3(0.05, -0.11, 0.07)
-	_rig.position = rest + sway + _punch
-	_rig.rotation_degrees = Vector3(_punch.z * 52.0, sway.x * 20.0, sway.y * -18.0)
+		if _mag:
+			_mag.position.y = -0.16
+	elif _mag:
+		_mag.position.y = -0.09
+	_rig.position = rest + sway + punch
+	_rig.rotation_degrees = Vector3(punch.z * 62.0, sway.x * 20.0 + punch.x * 18.0, sway.y * -18.0)
 
 
 func _try_fire(ads: bool) -> void:
@@ -118,12 +136,13 @@ func _try_fire(ads: bool) -> void:
 	dir = _spread(dir, spread)
 	_hitscan.fire(w, cam.global_position, dir, _muzzle.global_position)
 	_kick(w)
-	_punch += Vector3(0.0, 0.012, 0.042)
+	punch += Vector3(0.004, 0.016, 0.05)
 	AudioDirector.gunshot(str(w.get("audio", "")), cam.global_position)
 	VfxBus.muzzle(_muzzle.global_position, dir)
 	if GraphicsProfile.tier != GraphicsProfile.Tier.LOW:
 		VfxBus.muzzle_smoke(_muzzle.global_position, dir)
-		VfxBus.shell_eject(_muzzle.global_position, cam.global_transform.basis.x)
+		var shell_pos := _shell.global_position if _shell else _muzzle.global_position
+		VfxBus.shell_eject(shell_pos, cam.global_transform.basis.x)
 	for n in get_tree().get_nodes_in_group("shadowbreakers"):
 		if n.has_method("hear_event"):
 			n.hear_event(cam.global_position)
@@ -135,7 +154,7 @@ func _melee(w: Dictionary) -> void:
 		return
 	_last_fire = now
 	var cam := get_viewport().get_camera_3d()
-	_punch += Vector3(0.0, -0.02, 0.04)
+	punch += Vector3(0.0, -0.02, 0.04)
 	_hitscan.fire(w, cam.global_position, -cam.global_transform.basis.z, cam.global_position)
 
 
@@ -166,6 +185,7 @@ func reload() -> void:
 func cycle() -> void:
 	if ids.is_empty() or reloading:
 		return
+	punch += Vector3(0.05, -0.08, 0.1)
 	_apply_index((idx + 1) % ids.size())
 
 

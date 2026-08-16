@@ -119,10 +119,12 @@ func _on_extract(seconds: float) -> void:
 
 
 func _hitmarker(head: bool, killed: bool) -> void:
+	hit.size = Vector2(18, 18) if killed else Vector2(14, 14)
+	hit.position = Vector2(951, 531) if killed else Vector2(953, 533)
 	hit.color = Color(1, 0.75, 0.15, 1) if head else Color(1, 1, 1, 1)
 	if killed:
 		hit.color = Color(0.85, 0.15, 0.12, 1)
-	await get_tree().create_timer(0.08, false).timeout
+	await get_tree().create_timer(0.12 if killed else 0.08, false).timeout
 	hit.color.a = 0
 
 

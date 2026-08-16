@@ -82,3 +82,6 @@ Thumbs.db
 # Python
 __pycache__/
 *.py[cod]
+
+# Meshy generation dumps (import only curated GLBs under game/assets/)
+meshy_output/

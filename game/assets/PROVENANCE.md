@@ -37,12 +37,12 @@ Only resulting game meshes (GLB) are intended to ship.
 
 ### Current GLBs (Godot 4.7.1 imported, Gate A2 clay)
 
-Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms and KF-16 receiving-geo pass 2026-08-18. Assault kit integration 2026-08-18. Counts from Blender export (Godot recapture still held).
+Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms and KF-16 receiving-geo pass 2026-08-18. Assault kit `8c9c30a` and Phantom kit 2026-08-18. Counts from Blender export (Godot recapture still held).
 
 | asset_id | tris | verts | source body tris | GLB | notes |
 | --- | ---: | ---: | ---: | ---: | --- |
 | ff_op_assault | 41234 | 20911 | 26752 | 1002 KB | hm08 + MOLLE carrier / drop-leg / NVG shroud; full body kept |
-| ff_sb_phantom | 35506 | 17863 | 26752 | 838 KB | leaner macros; X-harness, sternum, proud pack |
+| ff_sb_phantom | 37934 | 19135 | 26752 | 908 KB | leaner macros; X-harness, compact pack, dual thigh pouches |
 | ff_wpn_kf16 | 4628 | 2344 | — | 121 KB | winter trigger well + support-corner relief; nodes unchanged |
 | ff_fps_arms | 5704 | 2856 | — | 135 KB | hm08 short extract re-seated after receiving-geo edit |
 

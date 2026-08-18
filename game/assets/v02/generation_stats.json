@@ -14,7 +14,9 @@
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
         "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
-        "kit_pieces": 38
+        "kit_pieces": 38,
+        "kit_tris": 14482,
+        "body_tris": 26752
       },
       "materials": 4,
       "textures": "none — Gate A clay",
@@ -25,23 +27,25 @@
     },
     {
       "asset": "ff_sb_phantom",
-      "tris": 35506,
-      "verts": 17863,
+      "tris": 37934,
+      "verts": 19135,
       "source_body_tris": 26752,
       "source_body_verts": 13378,
       "height_m": 1.740824260050431,
       "hidden": {
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "X-harness with sternum, compact pack + straps, sensor visor, boot cuffs",
-        "kit_pieces": 18
+        "kit_method": "X-harness + sternum, compact pack with lid/node, dual thigh pouches, stealth visor, waist taps",
+        "kit_pieces": 31,
+        "kit_tris": 11182,
+        "body_tris": 26752
       },
       "materials": 4,
-      "textures": "none — Gate A2 clay",
+      "textures": "none — Gate A clay",
       "rig": "deferred",
-      "glb_bytes": 857976,
+      "glb_bytes": 929696,
       "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, leaner macros, wearable harness/pack",
-      "date": "2026-08-17"
+      "date": "2026-08-18"
     },
     {
       "asset": "ff_wpn_kf16",

@@ -126,6 +126,26 @@ def tris(obj) -> int:
     return len(mesh.loop_triangles)
 
 
+def kit_meta(parts, body) -> dict:
+    live = [p for p in parts if p is not None]
+    kit_parts = [p for p in live if p != body]
+    return {
+        "kit_pieces": len(kit_parts),
+        "kit_tris": sum(tris(p) for p in kit_parts),
+        "body_tris": tris(body) if body is not None else 0,
+    }
+
+
+def print_mesh_bounds(obj, tag="") -> None:
+    pts = [obj.matrix_world @ v.co for v in obj.data.vertices]
+    xs, ys, zs = [p.x for p in pts], [p.y for p in pts], [p.z for p in pts]
+    print(
+        f"BBOX {tag or obj.name} x {min(xs):.3f}:{max(xs):.3f} "
+        f"y {min(ys):.3f}:{max(ys):.3f} z {min(zs):.3f}:{max(zs):.3f} n={len(pts)}",
+        flush=True,
+    )
+
+
 def clay(name, color, metallic=0.08, roughness=0.62, emission=None):
     if name in bpy.data.materials:
         return bpy.data.materials[name]
@@ -947,6 +967,33 @@ def drop_leg(target, body, name, keep: set[int], material, side: float):
     return join_objects(name, [plat, hol] + straps, material)
 
 
+def slim_thigh(target, body, name, keep: set[int], material, side: float, size=(0.038, 0.024, 0.078)):
+    """Seated thigh pouch + two wrap straps. Boxes, not grid panels."""
+    if len(keep) < 8:
+        return None
+    c = centroid_of(body, keep)
+    pouch = kit_box(
+        name + "P",
+        (c.x + side * 0.018, c.y - 0.030, c.z),
+        size,
+        material,
+        0.0018,
+    )
+    straps = []
+    for i, dz in enumerate((0.028, -0.028)):
+        s = add_cyl(name + f"St{i}", (c.x, c.y + 0.004, c.z + dz), 0.052, 0.010, (0.0, 0.0, 0.0), 12)
+        sw = s.modifiers.new("SW", "SHRINKWRAP")
+        sw.target = target
+        sw.wrap_method = "NEAREST_SURFACEPOINT"
+        sw.wrap_mode = "ABOVE_SURFACE"
+        sw.offset = 0.005
+        apply_mods(s)
+        assign_mat(s, material)
+        shade_auto(s)
+        straps.append(s)
+    return join_objects(name, [pouch] + straps, material)
+
+
 def elbow_pad(target, body, name, keep: set[int], material, side: float):
     """Wraps the elbow on the full body — the armless cage has no elbow surface."""
     if len(keep) < 6:
@@ -1297,11 +1344,14 @@ def kit_assault(body, mats) -> tuple[list, dict]:
         l_boot, r_boot, helm_kit, visor_obj, gaiter, l_glove, r_glove,
     ] + pouches
     parts = [p for p in parts if p is not None]
+    meta = kit_meta(parts, body)
     return parts, {
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
         "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
-        "kit_pieces": len(parts) - 1,
+        "kit_pieces": meta["kit_pieces"],
+        "kit_tris": meta["kit_tris"],
+        "body_tris": meta["body_tris"],
     }
 
 
@@ -1316,39 +1366,76 @@ def kit_phantom(body, mats) -> tuple[list, dict]:
     chest_c = centroid_of(body, r["chest"])
     back_c = centroid_of(body, r["back"])
     chest_s = region_size(body, r["chest"])
+    belt_c = centroid_of(body, r["belt"])
 
+    # Crossing X-harness (not a plate carrier). Strap width stays narrow.
     harness_a = fitted_panel(
-        cage, "HarnessA", chest_c + Vector((-0.045, -0.018, 0.04)),
-        0.038, 0.24, (-0.22, -1.0, 0.18), offset=0.009, thickness=0.007, cuts=4, material=armor,
+        cage, "HarnessA", chest_c + Vector((-0.02, -0.016, 0.02)),
+        0.030, 0.26, (-0.55, -1.0, 0.05), offset=0.009, thickness=0.006, cuts=4, material=armor,
     )
     harness_b = fitted_panel(
-        cage, "HarnessB", chest_c + Vector((0.045, -0.018, 0.04)),
-        0.038, 0.24, (0.22, -1.0, 0.18), offset=0.009, thickness=0.007, cuts=4, material=armor,
+        cage, "HarnessB", chest_c + Vector((0.02, -0.016, 0.02)),
+        0.030, 0.26, (0.55, -1.0, 0.05), offset=0.009, thickness=0.006, cuts=4, material=armor,
     )
-    sternum = kit_box("Sternum", tuple(chest_c + Vector((0.0, -0.055, 0.02))), (0.042, 0.016, 0.028), armor, 0.0016)
+    sternum = kit_box("Sternum", tuple(chest_c + Vector((0.0, -0.058, 0.015))), (0.048, 0.018, 0.032), armor, 0.0014)
     light_plate = fitted_panel(
-        cage, "LightPlate", chest_c + Vector((0.0, -0.022, -0.01)),
-        min(0.13, chest_s.x * 0.65), 0.11, (0.0, -1.0, 0.05),
-        offset=0.011, thickness=0.007, cuts=4, material=armor,
+        cage, "LightPlate", chest_c + Vector((0.0, -0.020, -0.02)),
+        min(0.11, chest_s.x * 0.55), 0.090, (0.0, -1.0, 0.04),
+        offset=0.010, thickness=0.006, cuts=4, material=armor,
     )
+    slim = flap_pouch(
+        "SlimPouch",
+        tuple(chest_c + Vector((0.055, -0.058, -0.04))),
+        (0.034, 0.024, 0.058),
+        armor,
+    )
+    waist_tap_l = kit_box("TapL", (chest_c.x - 0.055, chest_c.y - 0.040, belt_c.z + 0.035), (0.022, 0.014, 0.055), armor, 0.0012)
+    waist_tap_r = kit_box("TapR", (chest_c.x + 0.055, chest_c.y - 0.040, belt_c.z + 0.035), (0.022, 0.014, 0.055), armor, 0.0012)
+
     pack = kit_box(
         "Pack",
-        (back_c.x, back_c.y + 0.070, back_c.z + 0.02),
-        (0.10, 0.055, 0.16),
+        (back_c.x, back_c.y + 0.062, back_c.z + 0.015),
+        (0.088, 0.044, 0.125),
         armor,
-        0.0030,
+        0.0024,
     )
+    pack_lid = kit_box(
+        "PackLid",
+        (back_c.x, back_c.y + 0.078, back_c.z + 0.062),
+        (0.080, 0.016, 0.036),
+        armor,
+        0.0016,
+    )
+    pack_straps = [
+        kit_box("PackComp0", (back_c.x, back_c.y + 0.086, back_c.z + 0.01), (0.072, 0.008, 0.010), armor, 0.0008),
+        kit_box("PackComp1", (back_c.x, back_c.y + 0.086, back_c.z - 0.028), (0.072, 0.008, 0.010), armor, 0.0008),
+    ]
     pack_strap_l = fitted_panel(
-        cage, "PackSL", back_c + Vector((-0.06, 0.02, 0.08)),
-        0.022, 0.12, (-0.15, 0.85, 0.35), offset=0.010, thickness=0.005, cuts=3, material=armor,
+        cage, "PackSL", back_c + Vector((-0.055, 0.018, 0.07)),
+        0.020, 0.11, (-0.15, 0.85, 0.30), offset=0.009, thickness=0.004, cuts=3, material=armor,
     )
     pack_strap_r = fitted_panel(
-        cage, "PackSR", back_c + Vector((0.06, 0.02, 0.08)),
-        0.022, 0.12, (0.15, 0.85, 0.35), offset=0.010, thickness=0.005, cuts=3, material=armor,
+        cage, "PackSR", back_c + Vector((0.055, 0.018, 0.07)),
+        0.020, 0.11, (0.15, 0.85, 0.30), offset=0.009, thickness=0.004, cuts=3, material=armor,
     )
-    node = kit_box("SBNode", (back_c.x, back_c.y + 0.055, back_c.z + 0.05), (0.040, 0.024, 0.032), visor_m, 0.0018)
-    belt = fitted_belt(cage, body, "PBelt", armor, depth=0.038, extra=0.004, thickness=0.009)
-    slim = kit_box("SlimPouch", tuple(chest_c + Vector((0.065, -0.062, -0.05))), (0.032, 0.022, 0.055), armor, 0.0018)
+    node = kit_box("SBNode", (back_c.x, back_c.y + 0.088, back_c.z + 0.04), (0.036, 0.020, 0.028), visor_m, 0.0016)
+    tube = add_cyl("Hydra", (back_c.x - 0.038, back_c.y + 0.055, back_c.z + 0.08), 0.004, 0.12, (0.55, 0.0, 0.0), 8)
+    assign_mat(tube, armor)
+    shade_auto(tube)
+
+    belt = fitted_belt(cage, body, "PBelt", armor, depth=0.040, extra=0.004, thickness=0.009)
+    buckle = kit_box("PBuckle", (belt_c.x, belt_c.y - 0.072, belt_c.z), (0.038, 0.016, 0.028), armor, 0.0014)
+    hip = flap_pouch("HipPouch", (belt_c.x + 0.11, belt_c.y - 0.028, belt_c.z), (0.045, 0.032, 0.050), armor)
+
+    collar = fitted_panel(
+        cage, "PCollar", centroid_of(body, r["collar"]) + Vector((0.0, -0.012, 0.0)),
+        0.10, 0.048, (0.0, -0.35, 0.80), offset=0.009, thickness=0.006, cuts=3, material=armor,
+    )
+
+    l_thigh = slim_thigh(cage, body, "PThighL", r["thigh_pouch_l"], armor, -1.0, size=(0.042, 0.026, 0.085))
+    r_thigh = slim_thigh(cage, body, "PThighR", r["thigh_pouch_r"], armor, 1.0, size=(0.036, 0.022, 0.070))
+    lk = knee_mount(cage, body, "PLKnee", r["l_knee"], armor)
+    rk = knee_mount(cage, body, "PRKnee", r["r_knee"], armor)
 
     l_boot = boot_with_cuff(cage, body, "PLBoot", r["l_boot"], armor)
     r_boot = boot_with_cuff(cage, body, "PRBoot", r["r_boot"], armor)
@@ -1372,15 +1459,20 @@ def kit_phantom(body, mats) -> tuple[list, dict]:
     bpy.data.objects.remove(cage, do_unlink=True)
 
     parts = [
-        body, harness_a, harness_b, sternum, light_plate, pack, pack_strap_l, pack_strap_r,
-        node, belt, slim, l_boot, r_boot, helm_kit, visor_obj, sensor, sensor2, l_glove, r_glove,
-    ]
+        body, harness_a, harness_b, sternum, light_plate, slim, waist_tap_l, waist_tap_r,
+        pack, pack_lid, pack_strap_l, pack_strap_r, node, tube, belt, buckle, hip, collar,
+        l_thigh, r_thigh, lk, rk, l_boot, r_boot, helm_kit, visor_obj, sensor, sensor2,
+        l_glove, r_glove,
+    ] + pack_straps
     parts = [p for p in parts if p is not None]
+    meta = kit_meta(parts, body)
     return parts, {
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "X-harness with sternum, compact pack + straps, sensor visor, boot cuffs",
-        "kit_pieces": len(parts) - 1,
+        "kit_method": "X-harness + sternum, compact pack with lid/node, dual thigh pouches, stealth visor, waist taps",
+        "kit_pieces": meta["kit_pieces"],
+        "kit_tris": meta["kit_tris"],
+        "body_tris": meta["body_tris"],
     }
 
 
@@ -2396,6 +2488,8 @@ def build_phantom(svc, out_glb, render_dir, src_dir) -> dict:
     parts, hid = kit_phantom(body, mats)
     joined = join_objects("ff_sb_phantom", parts)
     t, v = count_tree(joined)
+    print_mesh_bounds(joined, "phantom")
+    print("KIT", hid, flush=True)
     export_glb(out_glb, [joined])
     render_previews(render_dir, "phantom_front.png", (0.0, -3.0, 0.90), (0.0, 0.0, 0.85), [joined], lens=55)
     render_previews(render_dir, "phantom_34.png", (2.0, -2.4, 1.00), (0.0, 0.0, 0.85), [joined], lens=50)

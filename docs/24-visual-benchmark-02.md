@@ -264,6 +264,29 @@ Evidence: `game/assets/v02/shots/gate_assault.png`, `gate_assault_34.png`, `gate
 
 Do not request Gate A / A2 approval on this pass.
 
+### Phantom kit integration (2026-08-18) — not a pass candidate
+
+Assault kit checkpoint `8c9c30a` stands. KF-16 still geometry-locked at `7cbad49`. This checkpoint is Phantom kit only.
+
+| Asset | Total tris | Body | Kit tris | Pieces | GLB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Assault | 41234 | 26752 | ~14482 | 38 | 1002 KB |
+| Phantom | **37934** | 26752 | **11182** | 31 | 908 KB |
+| KF-16 | 4628 | — | — | — | 121 KB (frozen) |
+| FPS arms | 5704 | — | — | — | 135 KB (frozen) |
+
+Kit tris survive collapse; body tris are what the next workstream cuts. Phantom kit is ~3.3k under Assault kit, which matches the leaner silhouette. LOD0 targets after collapse remain Assault ~22–25k / Phantom ~16–18k.
+
+What moved: crossing X-harness + sternum, waist taps into the belt, one slim chest pouch (not a 3-mag carrier), compact pack with lid / compression / tech node, dual seated thigh pouches, stealth visor + sensors. Thigh bbox clean (`xmax` 0.205, `ymin` −0.144). No MOLLE plate, no NVG shroud, no drop-leg holster — those stay Assault.
+
+**Midriff gap (decision, implement at collapse):** hidden-body collapse only decimates verts already covered by armor. A visible strip between plate/harness hem and belt is exposed fabric and **will still read after collapse**. Close Assault with a cummerbund (fitted panel from plate bottom to war belt) at the start of the collapse workstream, before decimate. Phantom keeps a leaner torso gap on purpose (infiltrator shirt under an X-harness); waist taps are the Phantom equivalent and will not be thickened into an Assault cummerbund.
+
+Still clay. Boots remain blocky (shared gaiter/tongue helper). Harness is straps-and-boxes, not sewn webbing. Godot recapture still held; `godot_import_stats.json` now nests the stale fps/draw-call capture under `godot_capture_held` (`3fd2fc3`) so it cannot be read as a measurement of these meshes.
+
+Evidence: `game/assets/v02/shots/gate_phantom.png`, `gate_phantom_34.png`, `gate_phantom_back.png`, `gate_phantom_helmet.png`, `gate_phantom_kit.png`, `gate_phantom_wire.png`, `gate_silhouette.png`. Assault / grip / KF-16 shots other than the shared silhouette were not rebuilt.
+
+Do not request Gate A / A2 approval on this pass.
+
 - nginx: remove duplicate `mp4` MIME under `/media/` (inherit `mime.types`). No routing change. No TuGPT change. Reload, not restart.
 - Godot: drop unused Android export preset so Web export does not probe Gradle `build-tools`. Do not install the Android SDK.
 

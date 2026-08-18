@@ -1,9 +1,6 @@
 {
 	"assault_tris": 41234,
-	"draw_calls": 5,
-	"fps": 54.0,
 	"fps_arms_tris": 5704,
-	"fps_capture_note": "54 FPS is the 2026-08-17 wrap-glove import (1112 tris). 5704-tri grip mesh was not re-captured in Godot; grip shots are Blender FOV-75 workbench frames.",
 	"kf16_nodes": [
 		"ff_wpn_kf162",
 		"ff_wpn_kf16",
@@ -17,13 +14,17 @@
 	"materials_assault": 4,
 	"materials_kf16": 2,
 	"materials_phantom": 4,
-	"phantom_tris": 35506,
+	"phantom_tris": 37934,
 	"surfaces_assault": 4,
 	"surfaces_kf16": 2,
 	"surfaces_phantom": 4,
+	"tris_source": "Blender export. Godot recapture held until grip passes.",
 	"version": "v2",
-	"window": [
-		1920,
-		1080
-	]
+	"godot_capture_held": {
+		"commit": "3fd2fc3",
+		"draw_calls": 5,
+		"fps": 54.0,
+		"window": [1920, 1080],
+		"note": "Stale inspection-scene numbers from the 2026-08-17 wrap-glove import (1112-tri arms). Do not treat as a measurement of current meshes."
+	}
 }

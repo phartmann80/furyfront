@@ -2371,6 +2371,93 @@ def render_silhouette(assault_glb, phantom_glb, render_dir) -> None:
     render_previews(render_dir, "silhouette_compare.png", (0.0, -4.2, 0.95), (0.0, 0.0, 0.85), subjects, lens=45)
 
 
+def _aim_cam(name, loc, look, *, lens=None, fov=None):
+    cam = bpy.data.cameras.new(name)
+    if fov is not None:
+        cam.lens_unit = "FOV"
+        cam.angle = math.radians(fov)
+    else:
+        cam.lens = lens if lens is not None else 50
+    ob = bpy.data.objects.new(name, cam)
+    ob.location = loc
+    direction = Vector(look) - Vector(loc)
+    if direction.length > 1e-6:
+        ob.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+    link(ob)
+    return ob
+
+
+def build_grip_handoff(svc, root: str) -> dict:
+    """Gun at current receiving geo + unposed hm08 extracts + evidence cameras.
+
+    Scripted posing stops here. A human poses in the viewport; bake/export is a later pass.
+    """
+    out_dir = os.path.join(root, "game", "assets", "v02", "handoff")
+    blend_dir = os.path.join(root, "art", "v02", "handoff")
+    prev = os.path.join(blend_dir, "preview")
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(prev, exist_ok=True)
+    clear_scene()
+    body, _src = create_shaped_human(
+        svc,
+        "FpsDonor",
+        {
+            "gender": 1.0,
+            "age": 0.52,
+            "muscle": 0.78,
+            "weight": 0.58,
+            "height": 0.56,
+            "proportions": 0.58,
+            "cupsize": 0.35,
+            "firmness": 0.45,
+            "race": {"african": 0.25, "asian": 0.15, "caucasian": 0.60},
+        },
+    )
+    glove = clay("fps_glove", (0.72, 0.50, 0.28), 0.04, 0.70)
+    metal = clay("k_metal_fps", (0.28, 0.29, 0.30), 0.78, 0.32)
+    poly = clay("k_poly_fps", (0.10, 0.10, 0.11), 0.06, 0.64)
+    gun, ginfo = kf16_build(metal, poly)
+
+    def park(side, out, along_hint, index_fwd, plane_pt, name):
+        across, along, out_v = _hand_axes(out, along_hint, index_fwd)
+        palm = Vector(plane_pt) + out_v * 0.024
+        hand = extract_viewmodel_arm(body, side)
+        src = measure_tpose_hand(hand, side)
+        _apply_basis(hand, src, palm, across, along, out_v)
+        assign_mat(hand, glove)
+        shade_auto(hand)
+        hand.name = name
+        return hand
+
+    rhand = park(1.0, (0.94, -0.34, -0.08), (0.06, 0.02, -0.99), (0.0, 1.0, 0.15), (0.020, -0.006, -0.070), "RHand")
+    lhand = park(-1.0, (-0.72, -0.58, 0.38), (0.10, 0.30, 0.95), (0.0, 1.0, 0.10), (-0.016, 0.218, 0.012), "LHand")
+    if body.name in bpy.data.objects:
+        bpy.data.objects.remove(body, do_unlink=True)
+    rhand.parent = gun
+    lhand.parent = gun
+
+    hip = _aim_cam("cam_hip", (0.0, 0.0, 0.0), (0.0, 1.0, 0.0), fov=GODOT_FOV)
+    hip.rotation_euler = (math.pi / 2.0, 0.0, 0.0)
+    ads_off = godot_to_blender(GODOT_ADS)
+    _aim_cam("cam_ads", (-ads_off.x, -ads_off.y, -ads_off.z), (0.0, 0.08, 0.02), fov=GODOT_FOV)
+    _aim_cam("cam_trigger", (0.16, 0.05, 0.04), (0.02, 0.002, -0.040), lens=42)
+    _aim_cam("cam_support", (-0.16, 0.12, 0.11), (0.00, 0.218, 0.032), lens=42)
+
+    export_glb(os.path.join(out_dir, "grip_unposed.glb"), [gun, rhand, lhand])
+    gun.location = godot_to_blender(GODOT_HIP)
+    bpy.context.view_layer.update()
+    render_fps(prev, "handoff_hip.png", [rhand, lhand, gun])
+    render_previews(prev, "handoff_trigger.png", (0.16, 0.05, 0.04), (0.02, 0.002, -0.040), [rhand, lhand, gun], lens=42)
+    render_previews(prev, "handoff_support.png", (-0.16, 0.12, 0.11), (0.00, 0.218, 0.032), [rhand, lhand, gun], lens=42)
+    gun.location = godot_to_blender(GODOT_ADS)
+    bpy.context.view_layer.update()
+    render_fps(prev, "handoff_ads.png", [rhand, lhand, gun])
+    gun.location = (0.0, 0.0, 0.0)
+    save_blend(os.path.join(blend_dir, "grip_pose.blend"))
+    print(f"HANDOFF blend={blend_dir}/grip_pose.blend glb={out_dir}/grip_unposed.glb", flush=True)
+    return {"kf16_tris": ginfo["tris"], "nodes": ginfo["nodes"]}
+
+
 def main() -> None:
     root = parse_root()
     glb_dir = os.path.join(root, "game", "assets", "v02")
@@ -2385,7 +2472,7 @@ def main() -> None:
     only = args[args.index("--only") + 1] if "--only" in args else "all"
     if only == "grip":
         only = "arms"
-    need_human = only in {"all", "assault", "phantom", "arms"}
+    need_human = only in {"all", "assault", "phantom", "arms", "handoff"}
     svc = mpfb_services() if need_human else None
     clear_scene()
     if need_human:
@@ -2393,6 +2480,12 @@ def main() -> None:
             print("skip gender probe; using male=1.0", flush=True)
         else:
             print("using male gender value", verify_gender_polarity(svc), flush=True)
+
+    if only == "handoff":
+        print("BUILD grip handoff (unposed extracts)", flush=True)
+        build_grip_handoff(svc, root)
+        print("done", os.path.join(root, "game", "assets", "v02", "handoff"), flush=True)
+        return
 
     stats = []
 

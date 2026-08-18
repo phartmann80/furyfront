@@ -230,7 +230,22 @@ Nodes (unchanged): MuzzleFlash Godot `(0, 0.028, -0.58)`; ShellEject `(0.04, 0.0
 
 Do not request Gate A / A2 approval on this pass.
 
-## Infrastructure (non-blocking, this branch)
+### Final scripted re-seat (2026-08-18) — fail; human-posing handoff
+
+One pass only, then stop. Re-derived the trigger index (park outboard, YZ hinge, −X enter) against the 36×38 mm well; deepened the support-corner scoop. Index tip reached the opening; the shaft still read through the wall. Support scoop boolean was a no-op (verts 60→60); fingers still through. Web clearance regressed when the whole trigger hand was re-framed.
+
+**Hard stop.** Runtime GLBs and `game/assets/v02/shots/` stay at `7cbad49` (last receiving-geo pose). Do not iterate scripted posing again.
+
+Handoff for a human viewport pass:
+
+- Instructions: `game/assets/v02/handoff/README.md`
+- Scene: `art/v02/handoff/grip_pose.blend` (RHand / LHand unposed extracts, current KF-16, cameras `cam_hip` `cam_ads` `cam_trigger` `cam_support`)
+- Import fallback: `game/assets/v02/handoff/grip_unposed.glb`
+- Rebuild the scene: `blender --background --python tools/blender/ff_gate_a.py -- --root <repo> --only handoff --skip-gender`
+
+After the human saves the blend, a later pass bakes `ff_fps_arms.glb` and refreshes the grip shot set.
+
+Do not request Gate A / A2 approval on this pass.
 
 - nginx: remove duplicate `mp4` MIME under `/media/` (inherit `mime.types`). No routing change. No TuGPT change. Reload, not restart.
 - Godot: drop unused Android export preset so Web export does not probe Gradle `build-tools`. Do not install the Android SDK.

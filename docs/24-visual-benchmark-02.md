@@ -204,9 +204,11 @@ Locked from earlier passes: palm plane-snap, contact-driven wrap-digit curl, sin
 
 This pass (authored last-mile on the solver start): support palm on the handguard **left face**; trigger index two-segment swing through the guard; authored trigger thumb approach.
 
-**Still fail:** thumb web into the receiver; index in the guard opening but clips the guard wall; support C-grip structure with fingers through the top-left handguard corner; wrist cuff still hangs.
+### Clearance pass (2026-08-18, follow-up) — not a pass candidate
 
-Review shots: `gate_fps_hip.png`, `gate_fps_ads.png`, `gate_fps_trigger.png`, `gate_fps_support.png`, `gate_fps_wire.png`, `gate_fps_hands_wire.png`, `gate_fps_intersect.png`.
+Biased to clearance over penetration: trigger palm/web push +X; index arc translated +6 mm outboard after seating; support palm 8.5 mm off the left face with lighter C-curl; support cuff translated toward camera.
+
+**Own review: still fail.** Index remains at the guard opening but still reads as clipping the guard wall in `gate_fps_trigger.png`. Support fingers still punch the top-left handguard corner in `gate_fps_support.png`. Thumb web improved but not cleanly seated. Wrist cuff is less of a hang, still a short extract edge.
 
 Do not request Gate A / A2 approval on this pass.
 

@@ -1,4 +1,6 @@
-# Skeleton status — rigging deferred
+# Skeleton status — planning only
+
+Rigging remains on hold until the visual gate (grip) passes. This file is a later-work note, not a current task.
 
 Forms are **not** keepable yet. Do not spend time on a production rig until the visual gate passes.
 

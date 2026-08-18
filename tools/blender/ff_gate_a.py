@@ -1610,8 +1610,8 @@ def snap_palm(ob, palm, along, across, out, bvh, sign, plane_pt, plane_n, cleara
         ob.data.update()
     sds = [nearest(bvh, ob.data.vertices[idx].co, sign)[2] for idx in pad]
     min_sd = min(sds) if sds else 0.0
-    if min_sd < 0.0012:
-        push = plane_n * (0.0020 - min_sd)
+    if min_sd < clearance:
+        push = plane_n * (clearance - min_sd)
         for v in ob.data.vertices:
             v.co += push
         delta_total += push
@@ -1773,69 +1773,107 @@ def pose_digit_to_target(ob, idxs, pivot, target, label, t=0.90):
     )
 
 
-def pose_thumb_wrap(ob, idxs, pivot, axis, target, amount, label, keep_x_neg=True):
-    """Wrap a thumb around `axis`. Reject the sign that drives the tip through the gun."""
+def web_indices(ob, palm, along, across, out):
+    """Thumb web / thenar pad — the region that was burying into the receiver."""
+    palm = Vector(palm)
+    along, across, out = Vector(along), Vector(across), Vector(out)
+    web = []
+    for v in ob.data.vertices:
+        rel = v.co - palm
+        if -0.030 <= rel.dot(along) <= -0.002 and 0.002 <= rel.dot(across) <= 0.028 and rel.dot(out) < 0.010:
+            web.append(v.index)
+    return web
+
+
+def push_hand_clearance(ob, idxs, bvh, sign, direction, min_clear=0.0022, max_push=0.008, label=""):
+    """Whole-hand translate along `direction` until listed verts clear. Bias clearance over penetration."""
+    if not idxs:
+        return
+    direction = Vector(direction).normalized()
+    pushed = 0.0
+    for _ in range(8):
+        sds = [nearest(bvh, ob.data.vertices[i].co, sign)[2] for i in idxs]
+        mn = min(sds)
+        if mn >= min_clear:
+            break
+        step = min(min_clear - mn, 0.0020)
+        if step <= 0.0 or pushed + step > max_push:
+            break
+        for v in ob.data.vertices:
+            v.co += direction * step
+        pushed += step
+        ob.data.update()
+    sds = [nearest(bvh, ob.data.vertices[i].co, sign)[2] for i in idxs]
+    mn = min(sds) if sds else 0.0
+    print(f"CLEAR {label} push={pushed:.4f} min_sd={mn:.4f} n={len(idxs)}", flush=True)
+
+
+def pose_support_cuff(ob, palm, along, across):
+    """Pull the extract cuff toward the camera. Translate, do not spin — rotation collapsed the cuff."""
+    del across
+    palm = Vector(palm)
+    along = Vector(along).normalized()
+    cuff = [v.index for v in ob.data.vertices if (v.co - palm).dot(along) < -0.008]
+    if len(cuff) < 8:
+        print("CUFF skipped", flush=True)
+        return
+    toward_cam = Vector((0.0, -0.040, 0.008))
+    for i in cuff:
+        w = min(1.0, abs((ob.data.vertices[i].co - palm).dot(along)) / 0.045)
+        ob.data.vertices[i].co += toward_cam * w
+    ob.data.update()
+    print(f"CUFF n={len(cuff)} toward_cam", flush=True)
+
+
+def authored_hinge(ob, idxs, pivot, axis, want, amount, label):
+    """Hinge around a fixed axis. Sign is the one that moves the tip toward `want`."""
     if len(idxs) < 4:
         print(f"{label} skipped", flush=True)
         return
-    pivot, axis, target = Vector(pivot), Vector(axis).normalized(), Vector(target)
+    pivot, axis, want = Vector(pivot), Vector(axis).normalized(), Vector(want)
     tip_i = max(idxs, key=lambda i: (ob.data.vertices[i].co - pivot).length)
-    rest = {i: ob.data.vertices[i].co.copy() for i in idxs}
-
-    def apply(ang):
-        rot = Matrix.Rotation(ang, 3, axis)
-        for i, p0 in rest.items():
-            ob.data.vertices[i].co = pivot + rot @ (p0 - pivot)
-        ob.data.update()
-
-    def score(ang):
-        apply(ang)
-        tip = ob.data.vertices[tip_i].co
-        d = (tip - target).length
-        through = (tip.x > 0.008) if keep_x_neg else (tip.x < -0.008)
-        return d + (0.12 if through else 0.0), tip, through
-
-    s_pos, t_pos, th_pos = score(amount)
-    s_neg, t_neg, th_neg = score(-amount)
-    if s_pos <= s_neg:
-        ang, tip, through = amount, t_pos, th_pos
-    else:
-        ang, tip, through = -amount, t_neg, th_neg
-    apply(ang)
+    _rotate_verts(ob, idxs, pivot, axis, 0.12)
+    d_pos = (ob.data.vertices[tip_i].co - want).length
+    _rotate_verts(ob, idxs, pivot, axis, -0.24)
+    d_neg = (ob.data.vertices[tip_i].co - want).length
+    _rotate_verts(ob, idxs, pivot, axis, 0.12)
+    sgn = 1.0 if d_pos < d_neg else -1.0
+    _rotate_verts(ob, idxs, pivot, axis, sgn * amount)
+    tip = ob.data.vertices[tip_i].co
     print(
-        f"{label} ang={ang:.2f} tip={tuple(round(c, 3) for c in tip)} "
-        f"dist={(tip - target).length:.4f} through={through}",
+        f"{label} ang={sgn * amount:.2f} tip={tuple(round(c, 3) for c in tip)} "
+        f"dist={(tip - want).length:.4f}",
         flush=True,
     )
 
 
 def pose_index_two_segment(ob, idxs, palm, along, across, out, bvh, sign):
-    """Trigger index: swing forward past the receiver, then in through the guard. Guard hits allowed."""
-    del bvh, sign
+    """Trigger index: seat at the opening, then translate the whole arc outboard of the guard wall."""
+    del bvh, sign, out
     if len(idxs) < 6:
         print("INDEX skipped", flush=True)
         return
     palm = Vector(palm)
-    along, across, out = Vector(along), Vector(across), Vector(out)
+    along, across = Vector(along), Vector(across)
     kn = palm + along * 0.008 + across * 0.020
     waypoint = Vector((0.008, 0.018, -0.024))
-    trigger = Vector((0.000, 0.005, -0.016))
+    trigger = Vector((0.004, 0.005, -0.016))
     tip_i = _tip_index(ob, idxs, palm, along)
-
-    def guard_hit(p: Vector) -> bool:
-        return abs(p.x) < 0.012 and -0.016 < p.y < 0.030 and -0.044 < p.z < -0.006
-
-    pose_digit_to_target(ob, idxs, kn, waypoint, "INDEX-swing", t=0.95)
+    pose_digit_to_target(ob, idxs, kn, waypoint, "INDEX-swing", t=0.90)
     scored = sorted(idxs, key=lambda i: (ob.data.vertices[i].co - ob.data.vertices[tip_i].co).length)
     dist = scored[: max(4, len(scored) // 2)]
     prox = [i for i in idxs if i not in set(dist)] or idxs
     mid_i = min(prox, key=lambda i: (ob.data.vertices[i].co - ob.data.vertices[tip_i].co).length)
     mid = ob.data.vertices[mid_i].co.copy()
-    pose_digit_to_target(ob, dist, mid, trigger, "INDEX-in", t=0.90)
+    pose_digit_to_target(ob, dist, mid, trigger, "INDEX-in", t=0.70)
+    for i in idxs:
+        ob.data.vertices[i].co.x += 0.006
+    ob.data.update()
     tip = ob.data.vertices[tip_i].co
+    opening = abs(tip.x) < 0.014 and -0.016 < tip.y < 0.030 and -0.044 < tip.z < -0.004
     print(
         f"INDEX final tip={tuple(round(c, 3) for c in tip)} "
-        f"to_trigger={(tip - trigger).length:.4f} in_guard={guard_hit(tip)}",
+        f"to_lip={(tip - trigger).length:.4f} at_opening={opening}",
         flush=True,
     )
 
@@ -1871,57 +1909,60 @@ def pose_contact_hand(
         idx = groups.get("index", [])
         idx = [i for i in idx if (ob.data.vertices[i].co - palm).dot(along) > 0.024]
         pose_index_two_segment(ob, idx, palm, along, across, out, bvh, sign)
-    elif wrap_prefer is not None:
-        pass
+    else:
+        for name in wrap:
+            for i in groups.get(name, []):
+                ob.data.vertices[i].co += Vector(plane_n) * 0.007
+        ob.data.update()
+        pose_support_cuff(ob, palm, along, across)
     thumb = groups.get("thumb", [])
-    if thumb and thumb_target is not None:
-        t_pivot = palm + Vector(across) * 0.010 - Vector(along) * 0.008 + Vector(out) * 0.002
-        if trigger:
-            # Around the front of the grip first, then onto the left side — not through the receiver.
-            pose_digit_to_target(ob, thumb, t_pivot, Vector((0.016, 0.022, -0.048)), f"{ob.name}-thumb-via", t=0.80)
-            pose_digit_to_target(ob, thumb, t_pivot, Vector(thumb_target), f"{ob.name}-thumb", t=0.55)
-        else:
-            pass  # rest pose already rides the left face; extra wrap was driving the thumb through/down
+    if trigger and thumb:
+        # Distal thumb only, rest along the grip's right/front — do not drag the web through the receiver.
+        t_pivot = palm + Vector(across) * 0.008 - Vector(along) * 0.006 + Vector(out) * 0.004
+        distal = distal_indices(ob, thumb, palm, across, frac=0.50)
+        pose_digit_to_target(ob, distal, t_pivot, Vector((0.018, 0.006, -0.040)), f"{ob.name}-thumb", t=0.70)
+        web = web_indices(ob, palm, along, across, out)
+        push_hand_clearance(ob, web or thumb, bvh, sign, plane_n, min_clear=0.0024, max_push=0.007, label=f"{ob.name}-web")
     assign_mat(ob, glove_mat)
     shade_auto(ob)
     return ob
 
 
 def posed_trigger_hand(glove_mat, body, bvh, sign) -> list:
-    """Right hm08 hand. Palm lower on the pistol grip; wrap digits curl; authored index + thumb."""
+    """Right hm08 hand. Palm on the grip side with clearance; authored outboard index; distal thumb."""
     across, along, out = _hand_axes(
-        (0.94, -0.34, -0.05),
+        (0.94, -0.34, -0.08),
         (0.06, 0.02, -0.99),
         (0.0, 1.0, 0.15),
     )
-    plane_pt = Vector((0.020, -0.006, -0.068))
+    plane_pt = Vector((0.020, -0.006, -0.070))
     plane_n = Vector((1.0, 0.0, 0.0))
-    palm_c = plane_pt + out * 0.022
+    palm_c = plane_pt + out * 0.024
     hand = extract_viewmodel_arm(body, 1.0)
     pose_contact_hand(
         hand, 1.0, palm_c, across, along, out, bvh, sign, glove_mat, plane_pt, plane_n,
-        trigger=True, thumb_target=(-0.014, 0.000, -0.042),
+        trigger=True, palm_clearance=0.0038,
     )
     hand.name = "RHand"
     return [hand]
 
 
 def posed_support_hand(glove_mat, body, bvh, sign) -> list:
-    """Left hm08 hand. Palm on the LEFT FACE; fingers over the top; wrist from camera, not below."""
+    """Left hm08 hand. Palm on the LEFT FACE; light C-curl over the top; cuff toward camera."""
     across, along, out = _hand_axes(
-        (-0.82, -0.42, 0.38),
-        (0.08, 0.16, 0.98),
+        (-0.72, -0.58, 0.38),
+        (0.10, 0.30, 0.95),
         (0.0, 1.0, 0.10),
     )
-    plane_pt = Vector((-0.016, 0.218, 0.022))
+    plane_pt = Vector((-0.016, 0.218, 0.012))
     plane_n = Vector((-1.0, 0.0, 0.0))
-    palm_c = plane_pt + out * 0.022
+    palm_c = plane_pt + out * 0.024
     hand = extract_viewmodel_arm(body, -1.0)
     pose_contact_hand(
         hand, -1.0, palm_c, across, along, out, bvh, sign, glove_mat, plane_pt, plane_n,
-        trigger=False, thumb_target=(-0.024, 0.248, 0.038),
-        wrap_max_ang=0.52, wrap_min_ang=0.18, wrap_clearance=0.0035,
-        wrap_prefer=(1.0, 0.0, 0.20), palm_clearance=0.0045,
+        trigger=False,
+        wrap_max_ang=0.28, wrap_min_ang=0.08, wrap_clearance=0.0050,
+        wrap_prefer=(1.0, 0.0, 0.25), palm_clearance=0.0085,
     )
     hand.name = "LHand"
     return [hand]

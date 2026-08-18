@@ -90,3 +90,4 @@ tools/.texcache/
 art/v02/renders/
 tools/blender/vendor/
 art/v02/archive/
+game/assets/v02/shots/*.import

@@ -1,0 +1,78 @@
+{
+  "gate": "A2",
+  "base": "MakeHuman hm08 via MPFB2 v2.0.17",
+  "license": "CC0 1.0 graphical assets; MPFB GPL-3.0 code not shipped",
+  "assets": [
+    {
+      "asset": "ff_op_assault",
+      "tris": 38070,
+      "verts": 19191,
+      "source_body_tris": 26752,
+      "source_body_verts": 13378,
+      "height_m": 1.8127289410331286,
+      "hidden": {
+        "hidden_verts_decimated": 0,
+        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
+        "kit_method": "thicker carrier + insert, seated pouches, shoulder straps, knee mounts, boot cuffs",
+        "kit_pieces": 25
+      },
+      "materials": 4,
+      "textures": "none — Gate A2 clay",
+      "rig": "deferred",
+      "glb_bytes": 928016,
+      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, wearable kit, no textures, no rig",
+      "date": "2026-08-17"
+    },
+    {
+      "asset": "ff_sb_phantom",
+      "tris": 35506,
+      "verts": 17863,
+      "source_body_tris": 26752,
+      "source_body_verts": 13378,
+      "height_m": 1.740824260050431,
+      "hidden": {
+        "hidden_verts_decimated": 0,
+        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
+        "kit_method": "X-harness with sternum, compact pack + straps, sensor visor, boot cuffs",
+        "kit_pieces": 18
+      },
+      "materials": 4,
+      "textures": "none — Gate A2 clay",
+      "rig": "deferred",
+      "glb_bytes": 857976,
+      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, leaner macros, wearable harness/pack",
+      "date": "2026-08-17"
+    },
+    {
+      "asset": "ff_wpn_kf16",
+      "tris": 4472,
+      "verts": 2264,
+      "materials": 2,
+      "textures": "none — Gate A2 clay",
+      "rig": "MuzzleFlash, ShellEject, Magazine, AdsAlign",
+      "glb_bytes": 117856,
+      "generation": "Gate A2 clay: unified KF-16 receiver/handguard/stock/magwell profile",
+      "date": "2026-08-18"
+    },
+    {
+      "asset": "ff_fps_arms",
+      "tris": 5704,
+      "verts": 2856,
+      "source_body_tris": 26752,
+      "materials": 2,
+      "textures": "none — Gate A2 clay",
+      "rig": "deferred — dedicated FPS viewmodel, weapon-local, parented to KF-16",
+      "space": "weapon-local",
+      "hands": "hm08 short extract — palm snap, wrap curl, authored index/thumb",
+      "budget_ok": true,
+      "gameplay_hip": [0.22, -0.19, -0.40],
+      "gameplay_ads": [0.0, -0.135, -0.36],
+      "gameplay_fov": 75.0,
+      "glb_bytes": 138200,
+      "generation": "Gate A2 clay: hm08 short-extract FPS hands, palm snap + wrap curl + authored index/thumb",
+      "date": "2026-08-18"
+    }
+  ],
+  "hidden_geo_strategy": "hm08 is the source mesh. Helpers are baked and stripped before kit. Kit is closed grids/volumes shrinkwrapped onto an armless wrap cage so T-pose arms cannot spike plates. Gate A2 keeps the full body for form review (no hidden-torso collapse yet). After approval, collapse covered torso under armor; keep face, neck, hands, feet, shoulders, elbows, knees. FPS arms are a separate viewmodel (weapon-local), not the 3P body.",
+  "runtime_note": "Triangle budget is the complete visible character, not source hm08 plus stacked kit."
+}

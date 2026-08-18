@@ -898,27 +898,109 @@ def mag_pouch(name, loc, material):
     return ob
 
 
+def molle_field(name, origin, material, *, rows=3, cols=5, pitch=(0.022, 0.018), width=0.13):
+    """Horizontal webbing + short verticals so the carrier reads as sewn MOLLE, not a bump grid."""
+    bits = []
+    ox, oy, oz = origin
+    px, pz = pitch
+    for r in range(rows):
+        z = oz + (r - (rows - 1) * 0.5) * pz
+        bits.append(add_box(f"{name}_h{r}", (ox, oy, z), (width, 0.008, 0.007)))
+        for c in range(cols):
+            x = ox + (c - (cols - 1) * 0.5) * px
+            bits.append(add_box(f"{name}_v{r}{c}", (x, oy, z), (0.007, 0.007, 0.014)))
+    ob = join_objects(name, bits, material)
+    shade_auto(ob)
+    return ob
+
+
+def drop_leg(target, body, name, keep: set[int], material, side: float):
+    """Thigh platform + holster brick + two wrap straps. Volume wrap, not a grid panel (those spike)."""
+    if len(keep) < 8:
+        return None
+    c = centroid_of(body, keep)
+    plat = fitted_volume(
+        target, name + "Plat",
+        (c.x + side * 0.016, c.y - 0.020, c.z),
+        (0.068, 0.018, 0.12),
+        offset=0.009, thickness=0.006, cuts=2, material=material,
+    )
+    hol = kit_box(
+        name + "Hol",
+        (c.x + side * 0.018, c.y - 0.048, c.z - 0.008),
+        (0.040, 0.028, 0.090),
+        material,
+        0.0020,
+    )
+    straps = []
+    for i, dz in enumerate((0.038, -0.038)):
+        s = add_cyl(name + f"St{i}", (c.x, c.y + 0.004, c.z + dz), 0.058, 0.012, (0.0, 0.0, 0.0), 12)
+        sw = s.modifiers.new("SW", "SHRINKWRAP")
+        sw.target = target
+        sw.wrap_method = "NEAREST_SURFACEPOINT"
+        sw.wrap_mode = "ABOVE_SURFACE"
+        sw.offset = 0.006
+        apply_mods(s)
+        assign_mat(s, material)
+        shade_auto(s)
+        straps.append(s)
+    return join_objects(name, [plat, hol] + straps, material)
+
+
+def elbow_pad(target, body, name, keep: set[int], material, side: float):
+    """Wraps the elbow on the full body — the armless cage has no elbow surface."""
+    if len(keep) < 6:
+        return None
+    c = centroid_of(body, keep)
+    return fitted_panel(
+        target, name, c + Vector((side * 0.02, -0.01, 0.0)),
+        0.055, 0.070, (side * 0.85, -0.4, 0.1), offset=0.010, thickness=0.008, cuts=3, material=material,
+    )
+
+
+def flap_pouch(name, loc, size, material):
+    """Admin / dump / lumbar: body + flap + sewn tab so it is not a blank brick."""
+    pouch = add_box(name + "B", loc, size)
+    flap = add_box(
+        name + "F",
+        (loc[0], loc[1] - size[1] * 0.12, loc[2] + size[2] * 0.42),
+        (size[0] * 0.92, size[1] * 0.82, size[2] * 0.16),
+    )
+    tab = add_box(
+        name + "T",
+        (loc[0], loc[1] + size[1] * 0.38, loc[2] + size[2] * 0.05),
+        (size[0] * 0.28, size[1] * 0.28, size[2] * 0.42),
+    )
+    ob = join_objects(name, [pouch, flap, tab], material)
+    finish_hard(ob, 0.0020, 2)
+    return ob
+
+
 def knee_mount(target, body, name, keep: set[int], material):
-    """Hard cap + strap so the pad reads as mounted, not a floating tile."""
+    """Hard cap + two wrap straps so the pad reads as mounted, not a floating tile."""
     c = centroid_of(body, keep)
     pad = fitted_panel(
         target, name + "Pad", c + Vector((0.0, -0.01, 0.0)),
         0.078, 0.088, (0.0, -1.0, 0.12), offset=0.011, thickness=0.011, cuts=3, material=material,
     )
     cap = kit_box(name + "Cap", (c.x, c.y - 0.028, c.z + 0.004), (0.055, 0.016, 0.048), material, 0.0020)
-    strap = add_cyl(name + "Strap", (c.x, c.y + 0.008, c.z - 0.018), 0.052, 0.014, (0.0, 0.0, 0.0), 16)
-    sw = strap.modifiers.new("SW", "SHRINKWRAP")
-    sw.target = target
-    sw.wrap_method = "NEAREST_SURFACEPOINT"
-    sw.wrap_mode = "ABOVE_SURFACE"
-    sw.offset = 0.006
-    apply_mods(strap)
-    assign_mat(strap, material)
-    shade_auto(strap)
-    return join_objects(name, [pad, cap, strap], material)
+    straps = []
+    for i, dz in enumerate((-0.018, -0.040)):
+        s = add_cyl(name + f"St{i}", (c.x, c.y + 0.008, c.z + dz), 0.052 if i == 0 else 0.048, 0.013, (0.0, 0.0, 0.0), 14)
+        sw = s.modifiers.new("SW", "SHRINKWRAP")
+        sw.target = target
+        sw.wrap_method = "NEAREST_SURFACEPOINT"
+        sw.wrap_mode = "ABOVE_SURFACE"
+        sw.offset = 0.006
+        apply_mods(s)
+        assign_mat(s, material)
+        shade_auto(s)
+        straps.append(s)
+    return join_objects(name, [pad, cap] + straps, material)
 
 
 def boot_with_cuff(target, body, name, keep: set[int], material):
+    """Combat boot + gaiter cuff + tongue so the pant tuck reads as a transition, not a cylinder cap."""
     boot = simple_boot(body, name, keep, material)
     if boot is None:
         return None
@@ -926,9 +1008,9 @@ def boot_with_cuff(target, body, name, keep: set[int], material):
     loc = Vector((
         sum(p.x for p in pts) / len(pts),
         sum(p.y for p in pts) / len(pts),
-        min(p.z for p in pts) + 0.155,
+        min(p.z for p in pts) + 0.162,
     ))
-    cuff = add_cyl(name + "Cuff", tuple(loc), 0.050, 0.042, (0.0, 0.0, 0.0), 14)
+    cuff = add_cyl(name + "Cuff", tuple(loc), 0.052, 0.055, (0.0, 0.0, 0.0), 14)
     sw = cuff.modifiers.new("SW", "SHRINKWRAP")
     sw.target = target
     sw.wrap_method = "NEAREST_SURFACEPOINT"
@@ -940,7 +1022,14 @@ def boot_with_cuff(target, body, name, keep: set[int], material):
     apply_mods(cuff)
     assign_mat(cuff, material)
     shade_auto(cuff)
-    return join_objects(name, [boot, cuff], material)
+    tongue = kit_box(
+        name + "Tongue",
+        (loc.x, loc.y - 0.048, loc.z - 0.012),
+        (0.030, 0.016, 0.088),
+        material,
+        0.0016,
+    )
+    return join_objects(name, [boot, cuff, tongue], material)
 
 
 def kit_box(name, loc, size, material, bevel=0.0024):
@@ -1041,8 +1130,8 @@ def kit_assault(body, mats) -> tuple[list, dict]:
     )
     plate_insert = kit_box(
         "PlateInsert",
-        (chest_c.x, chest_c.y - 0.072, chest_c.z + 0.01),
-        (0.16, 0.022, 0.20),
+        (chest_c.x, chest_c.y - 0.078, chest_c.z + 0.01),
+        (0.168, 0.028, 0.205),
         armor,
         0.0030,
     )
@@ -1090,11 +1179,67 @@ def kit_assault(body, mats) -> tuple[list, dict]:
         mag_pouch("Mag1", (chest_c.x + 0.000, pouch_y - 0.004, chest_c.z - 0.045), armor),
         mag_pouch("Mag2", (chest_c.x + 0.052, pouch_y, chest_c.z - 0.045), armor),
     ]
+    webbing = kit_box(
+        "MagWeb",
+        (chest_c.x, pouch_y + 0.018, chest_c.z - 0.045),
+        (0.155, 0.010, 0.072),
+        armor,
+        0.0014,
+    )
+    molle_f = molle_field(
+        "MolleF",
+        (chest_c.x, chest_c.y - 0.102, chest_c.z + 0.058),
+        armor,
+        rows=3,
+        cols=6,
+        pitch=(0.022, 0.018),
+        width=0.14,
+    )
+    molle_b = molle_field(
+        "MolleB",
+        (back_c.x, back_c.y + 0.062, back_c.z + 0.02),
+        armor,
+        rows=3,
+        cols=5,
+        pitch=(0.022, 0.018),
+        width=0.12,
+    )
+    admin = flap_pouch(
+        "Admin",
+        (chest_c.x, pouch_y + 0.006, chest_c.z + 0.062),
+        (0.100, 0.028, 0.042),
+        armor,
+    )
+    belt_c = centroid_of(body, r["belt"])
+    dump = flap_pouch(
+        "Dump",
+        (belt_c.x - 0.13, belt_c.y - 0.052, belt_c.z - 0.012),
+        (0.078, 0.048, 0.070),
+        armor,
+    )
+    lumbar = flap_pouch(
+        "Lumbar",
+        (back_c.x, back_c.y + 0.055, belt_c.z + 0.008),
+        (0.12, 0.040, 0.055),
+        armor,
+    )
     util = kit_box("Util", (chest_c.x - 0.12, pouch_y + 0.04, chest_c.z - 0.14), (0.05, 0.032, 0.055), armor, 0.0022)
     radio = kit_box("Radio", tuple(chest_c + Vector((-0.13, -0.02, 0.10))), (0.038, 0.048, 0.062), armor, 0.0020)
     ant = add_cyl("Ant", tuple(Vector(radio.location) + Vector((0.0, 0.0, 0.052))), 0.004, 0.065, (0.0, 0.0, 0.0), 8)
     assign_mat(ant, armor)
     shade_auto(ant)
+    l_buckle = kit_box("LBuckle", tuple(chest_c + Vector((-0.075, -0.055, 0.10))), (0.024, 0.016, 0.018), armor, 0.0012)
+    r_buckle = kit_box("RBuckle", tuple(chest_c + Vector((0.075, -0.055, 0.10))), (0.024, 0.016, 0.018), armor, 0.0012)
+
+    l_elbow_idx = {i for i in r["elbows"] if body.data.vertices[i].co.x < 0}
+    r_elbow_idx = {i for i in r["elbows"] if body.data.vertices[i].co.x > 0}
+    l_elb = elbow_pad(body, body, "LElbow", l_elbow_idx, armor, -1.0)
+    r_elb = elbow_pad(body, body, "RElbow", r_elbow_idx, armor, 1.0)
+    drop = drop_leg(cage, body, "DropLeg", r["thigh_pouch_r"], armor, 1.0)
+    cargo = fitted_volume(
+        cage, "CargoL", centroid_of(body, r["thigh_pouch_l"]) + Vector((-0.01, -0.02, 0.0)),
+        (0.055, 0.028, 0.085), offset=0.010, thickness=0.007, cuts=2, material=armor,
+    )
 
     l_boot = boot_with_cuff(cage, body, "LBoot", r["l_boot"], armor)
     r_boot = boot_with_cuff(cage, body, "RBoot", r["r_boot"], armor)
@@ -1104,6 +1249,29 @@ def kit_assault(body, mats) -> tuple[list, dict]:
     helm_bits = closed_helmet(body, armor, visor_m, stealth=False)
     visor_obj = helm_bits[1]
     cups = helm_bits[4:]
+    hloc = helm_bits[0].location
+    rad = 0.118
+    shroud = kit_box("NvgShroud", (hloc.x, hloc.y - rad * 0.38, hloc.z + 0.042), (0.042, 0.028, 0.022), armor, 0.0014)
+    nvg = kit_box("NvgMount", (hloc.x, hloc.y - rad * 0.52, hloc.z + 0.036), (0.020, 0.018, 0.014), armor, 0.0008)
+    rails = []
+    for i, cup in enumerate(cups[:2]):
+        sx = 1.0 if cup.location.x >= 0 else -1.0
+        rails.append(
+            kit_box(
+                f"ArcRail{i}",
+                (cup.location.x + sx * 0.012, cup.location.y, cup.location.z + 0.004),
+                (0.012, 0.070, 0.024),
+                armor,
+                0.0010,
+            )
+        )
+    gaiter = kit_box(
+        "Gaiter",
+        (hloc.x, hloc.y - rad * 0.28, hloc.z - 0.058),
+        (rad * 0.78, 0.032, 0.052),
+        visor_m,
+        0.0020,
+    )
     boom = add_cyl(
         "Boom",
         (cups[0].location.x * 0.25, helm_bits[0].location.y - 0.07, helm_bits[0].location.z - 0.022),
@@ -1114,20 +1282,25 @@ def kit_assault(body, mats) -> tuple[list, dict]:
     )
     assign_mat(boom, armor)
     shade_auto(boom)
-    helm_kit = join_objects("HelmetKit", [helm_bits[0], helm_bits[2], helm_bits[3], boom] + cups, armor)
+    helm_kit = join_objects(
+        "HelmetKit",
+        [helm_bits[0], helm_bits[2], helm_bits[3], boom, shroud, nvg] + cups + rails,
+        armor,
+    )
 
     bpy.data.objects.remove(cage, do_unlink=True)
 
     parts = [
         body, front, plate_insert, back, l_side, r_side, l_pad, r_pad, collar,
-        l_strap, r_strap, belt, lk, rk, util, radio, ant, l_boot, r_boot,
-        helm_kit, visor_obj, l_glove, r_glove,
+        l_strap, r_strap, l_buckle, r_buckle, belt, lk, rk, webbing, molle_f, molle_b,
+        admin, dump, lumbar, util, radio, ant, drop, cargo, l_elb, r_elb,
+        l_boot, r_boot, helm_kit, visor_obj, gaiter, l_glove, r_glove,
     ] + pouches
     parts = [p for p in parts if p is not None]
     return parts, {
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "thicker carrier + insert, seated pouches, shoulder straps, knee mounts, boot cuffs",
+        "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
         "kit_pieces": len(parts) - 1,
     }
 

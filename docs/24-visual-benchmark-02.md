@@ -247,6 +247,23 @@ After the human saves the blend, a later pass bakes `ff_fps_arms.glb` and refres
 
 Do not request Gate A / A2 approval on this pass.
 
+### Assault kit integration (2026-08-18) — not a pass candidate
+
+Posing session is pending; KF-16 remains geometry-locked at `7cbad49`. This checkpoint is Assault kit only. Phantom kit, hidden-body collapse, and rifle work are separate reports.
+
+| Asset | Tris | GLB | Notes |
+| --- | ---: | ---: | --- |
+| Assault | **41234** | 1002 KB | MOLLE webbing, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, dual knee straps, gaiter/tongue boots. Full hm08 kept. |
+| Phantom | 35506 | 838 KB | Unchanged this checkpoint |
+| KF-16 | 4628 | 121 KB | Frozen at `7cbad49` |
+| FPS arms | 5704 | 135 KB | Frozen until grip bake |
+
+Still clay. Carrier now has attachment language (webbing rows, pouch flaps/tabs, strap buckles, mounted knee caps). Helmet reads high-cut with a shroud and side rails rather than a plain bowl. Drop-leg is a seated thigh volume, not a shrinkwrap panel. Midriff still shows under the plate; boots are still blocky. Collapse to ~22–25k LOD0 is the next Assault workstream after Phantom kit, not this commit.
+
+Evidence: `game/assets/v02/shots/gate_assault.png`, `gate_assault_34.png`, `gate_assault_back.png`, `gate_assault_helmet.png`, `gate_assault_kit.png`, `gate_assault_wire.png`, `gate_silhouette.png`. Grip and KF-16 shots untouched.
+
+Do not request Gate A / A2 approval on this pass.
+
 - nginx: remove duplicate `mp4` MIME under `/media/` (inherit `mime.types`). No routing change. No TuGPT change. Reload, not restart.
 - Godot: drop unused Android export preset so Web export does not probe Gradle `build-tools`. Do not install the Android SDK.
 

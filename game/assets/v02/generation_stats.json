@@ -5,23 +5,23 @@
   "assets": [
     {
       "asset": "ff_op_assault",
-      "tris": 38070,
-      "verts": 19191,
+      "tris": 41234,
+      "verts": 20911,
       "source_body_tris": 26752,
       "source_body_verts": 13378,
       "height_m": 1.8127289410331286,
       "hidden": {
         "hidden_verts_decimated": 0,
         "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "thicker carrier + insert, seated pouches, shoulder straps, knee mounts, boot cuffs",
-        "kit_pieces": 25
+        "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
+        "kit_pieces": 38
       },
       "materials": 4,
-      "textures": "none — Gate A2 clay",
+      "textures": "none — Gate A clay",
       "rig": "deferred",
-      "glb_bytes": 928016,
+      "glb_bytes": 1025680,
       "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, wearable kit, no textures, no rig",
-      "date": "2026-08-17"
+      "date": "2026-08-18"
     },
     {
       "asset": "ff_sb_phantom",

@@ -85,3 +85,8 @@ __pycache__/
 
 # Meshy generation dumps (import only curated GLBs under game/assets/)
 meshy_output/
+tools/.texcache/
+*.blend1
+art/v02/renders/
+tools/blender/vendor/
+art/v02/archive/

@@ -1,7 +1,7 @@
 # Fury Front — Visual Benchmark 0.2
 
 Date: 2026-08-16  
-Branch: `feat/v02-visual-benchmark`  
+Branch: `art/v02-gate-a`  
 Base production: `000fc959a15e869d675cadf0be5b8bad2169aa03`  
 Rollback (keep): `/var/www/furyfront/releases/866893a`
 
@@ -68,26 +68,147 @@ Muzzle flash, bullet impacts, sparks, dust hits, hit feedback, recoil presentati
 
 First sound **benchmark** is planned, not bulk-recorded in this gate: KF-16 gunshot, reload, mag handling, impacts, footsteps, Shadowbreaker fire, base alarm, radio, Ironfall ambience. Positional where appropriate. Procedural WAV remains until licensed/original recordings land with provenance.
 
-## Meshy (production 3D)
+## Meshy (removed)
 
-Godot imports **GLB**. Do not generate FBX for this runtime.
+Meshy is **not** used. V2 GLBs are locally authored (`tools/generate_v02_benchmark_glbs.py`) and imported at `game/assets/v02/`.
 
-Balance at start of 0.2: **100 credits**.
+## First visual gate (V1) — not approved
 
-Recommended first-gate pack (wait for explicit credit confirmation):
+V1 kitbash (960 / 288 / 200 / 776 tris, single material, cylindrical UVs, faction-colored albedo bands) passed the **technical** pipeline gate and failed the **visual** gate. Too sparse to establish production identity.
 
-| Step | Credits | Count | Subtotal |
+## Second visual gate (V2)
+
+Same four assets only. Layered hard-surface, UV islands, albedo + normal + ORM, 2–3 materials, documented joint empties without skin weights. Benchmark: `res://scenes/benchmark/visual_gate.tscn` (keys 1–7, N/I lighting). Skeleton markers: `game/assets/v02/SKELETON.md`.
+
+Ironfall still uses the approved layout overlay only; the gate courtyard received a material/branding pass, not a full kit.
+
+### V2 measured (2026-08-16, this branch, not deployed)
+
+Godot 4.7.1 Compatibility, Intel UHD 1080p inspection scene. Play path still uses V0.1 placeholders.
+
+| Asset | Tris | Verts | Mats | GLB | GPU tex (S3TC+mips) |
+| --- | --- | --- | --- | --- | --- |
+| Assault | 14624 | 43872 | 3 | 1.51 MB | ~2.67 MB |
+| Phantom | 10852 | 32556 | 3 | 1.14 MB | ~2.67 MB |
+| KF-16 | 5820 | 17460 | 2 | 0.63 MB | ~2.67 MB |
+| FPS arms | 4468 | 13404 | 2 | 0.50 MB | ~2.67 MB |
+
+KF-16 nodes preserved: `MuzzleFlash`, `ShellEject`, `Magazine`, `AdsAlign`. Weapon balance JSON unchanged.
+
+| Budget | V0.1 live | V2 web export (local) |
+| --- | --- | --- |
+| pck | 1.45 MB | **13.13 MB** (+11.68) |
+| wasm | ~39.5 MB | 37.68 MB |
+| `/play/` approx | ~39.4 MB | **51.08 MB** |
+| `/play/` ceiling | 55 MB | still under |
+| Benchmark draw calls | — | 7–15 |
+| Benchmark FPS @ 1080p | — | 60 (settled, Intel UHD, inspection only) |
+| GPU tex for 4 assets | — | 10.67 MB compressed |
+
+Art growth is at the ~12 MB pck allowance. Further 1K atlases will need LODs or shared textures before more characters.
+
+This pass is **denser authored kitbash**, not DCC-sculpted production identity. If the visual gate rejects V2, do not run another Python primitive pass — switch to a local DCC (Blender) or another no-Meshy mesh pipeline.
+
+### DCC pipeline (Blender 4.5, local — 2026-08-16)
+
+Portable Blender 4.5.10 LTS on the **dev machine only** (`%LOCALAPPDATA%\Programs\Blender-4.5.10\`). Cursor drives it via `tools/blender/ff_dcc.py`. Blend sources: `art/v02/src/` (not packed). Concept refs: `art/v02/refs/`. Clay/wire: `art/v02/renders/` (gitignored). Runtime GLBs **replace** kitbash in `game/assets/v02/`. Shots excluded from PCK (`assets/v02/shots/*`).
+
+Godot-confirmed (Compatibility, 1920×1080, `visual_gate.tscn`):
+
+| Asset | Tris | Verts | Mats | GLB | Rig |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Assault | 21996 | 11082 | 3 | 697 KB | `AssaultRig` auto-weights |
+| Phantom | 17266 | 8659 | 3 | 509 KB | `PhantomRig` auto-weights |
+| KF-16 | 8968 | 4560 | 2 | 717 KB | MuzzleFlash, ShellEject, Magazine, AdsAlign |
+| FPS arms | 7024 | 3552 | 2 | 194 KB | `ArmsRig` auto-weights |
+
+Arms over the 6k budget. KF-16 over the written 8k Medium cap, inside the 5k–10k user band.
+
+| Budget | V0.1 live | V2 kitbash (superseded) | DCC replace (local, not deployed) |
 | --- | --- | --- | --- |
-| Preview (meshy-5 / non-latest) | 5 | 4 models | 20 |
-| Refine | 10 | 4 | 40 |
-| Remesh (game topology) | 5 | 4 | 20 |
-| **Total** | | | **80** |
+| pck | 1.45 MB | 13.13 MB | **3.14 MB** |
+| wasm | ~39.5 MB | 37.68 MB | 37.68 MB |
+| `/play/` approx | ~39.4 MB | 51.08 MB | **40.82 MB** |
+| `/play/` ceiling | 55 MB | under | under (headroom restored by dropping 1K atlases) |
+| Benchmark draw | — | 7–15 | 7 (inspection) / 15 (Ironfall overlay) |
+| 1080p FPS | — | 60 settled | **58** settled native inspection (`godot_import_stats.json`); overlay FPS during PNG capture is not the settled figure |
+| GPU tex | — | 10.67 MB S3TC | default glTF materials (no 1K atlases) |
+| Browser FPS / JS heap | — | V2 play path only | **not re-measured in a browser this pass** — do not treat native 58 as a `/play/` combat number |
 
-Models: Assault operator (T-pose), FPS arms, KF-16, Phantom Infiltrator.
+KF-16 nodes preserved. Weapon balance JSON unchanged. Production remains `000fc95`. **Not deployed.**
 
-Meshy-6 preview at 20 each would be 80 before refine and would **exceed** the 100-credit balance once remesh is included. Concept stills (nano-banana-pro) are out of budget for this gate.
+**Visual gate: fail.** Pipeline proof only. Bodies are skin/remesh mannequins with jagged plate shells, mitten hands, featureless helmet volumes. KF-16 is still stacked boxes/cylinders with a rail array. UVs are smart-project; materials are 2–3 Principled slots without authored albedo/normal/ORM. Auto-weights exist; no animation clips.
 
-No Meshy call until the user confirms this spend.
+Do not request visual approval on this pass. Unattended bpy is not enough for production identity. Next authorized step, if taken, is a real human base mesh (authored or CC0 with provenance) plus interactive hard-surface for the KF-16 in the same four-asset Blender files — not another generator rewrite and not Meshy.
+
+### DCC refine (metaball + shrinkwrap — 2026-08-16/17)
+
+Same four assets, portable Blender only. Replaced the skin/extract-shell GLBs in place. Rigging deferred.
+
+Godot-confirmed (`visual_gate.tscn`, Compatibility, 1920×1080):
+
+| Asset | Tris | Verts | Mats (Godot) | Textures | GLB |
+| --- | ---: | ---: | ---: | --- | ---: |
+| Assault | 11760 | 6028 | 4 | 256 albedo | 640 KB |
+| Phantom | 9060 | 4640 | 4 | 256 albedo | 548 KB |
+| KF-16 | 8576 | 4364 | 2 | 256 albedo | 377 KB |
+| FPS arms | 4112 | 2128 | 2 | 256 albedo | 276 KB |
+
+KF-16 nodes: `MuzzleFlash`, `ShellEject`, `Magazine`, `AdsAlign`. Weapon JSON unchanged. Collision/nav hulls untouched.
+
+| | This refine (local, not deployed) |
+| --- | --- |
+| Native 1080p settled FPS | **60** (`godot_import_stats.json`) |
+| Draw | 9 inspection / 17 Ironfall overlay |
+| Rigging | deferred — no armature this pass |
+| pck (local web export) | **3.14 MB** (same band as prior DCC replace; `/play/` ≈ **40.82 MB** vs 55 MB ceiling) |
+| Browser FPS / JS heap | not re-measured in a browser this pass — native 60 is inspection only |
+
+**Visual gate: still fail.** Metaball body is one volume (bbox ~1.84 m tall, arms present) but still reads as lumpy capsules, thin neck/waist, and shrinkwrap plates that sit as boxes. KF-16 still reads as assembled blocks. FPS arms are off-camera in the current viewmodel placement. Do not request visual approval.
+
+### Gate A2 (hm08 clay revision — 2026-08-17)
+
+Focused revision on `feat/v02-visual-benchmark`. Production remains `000fc95`. Not deployed. Textures hold. Rigging hold. Weapon JSON untouched.
+
+Godot 4.7.1 Compatibility import (`visual_gate.tscn`, 1920×1080):
+
+| Asset | Runtime tris | GLB | Notes |
+| --- | ---: | ---: | --- |
+| Assault | 38070 | 906 KB | hm08 + thicker carrier, seated pouches, straps, knee mounts, boot cuffs |
+| Phantom | 35506 | 838 KB | X-harness + sternum, proud pack, boot cuffs |
+| KF-16 | 4472 | 115 KB | One YZ body profile; MuzzleFlash, ShellEject, Magazine, AdsAlign |
+| FPS arms | 1112 | 33 KB | Weapon-local wrap-gloves + forearm tubes, parented to KF-16 |
+
+**Gate A: not approved. Gate A2: not approved.** Do not request approval on this pass.
+
+What moved: review scene still loads only the four clay GLBs; silhouettes stay human and distinguishable; kit stays shrinkwrapped/seated rather than extracted shells; KF-16 nodes import; FPS arms now parent to the rifle so hip and ADS share one pose.
+
+What still blocks:
+
+1. FPS grip is the highest remaining miss. Hands are closed wrap volumes and forearm tubes, not a seated trigger hand and a wrapped support hand. Contact is approximate; intersections and float are still visible in hip / ADS / intersect shots.
+2. KF-16 is one profile instead of stacked boxes, but still reads angular at gameplay distance. Receiver, magwell, and stock need another form pass before they read as one service rifle.
+3. Kit has more thickness and attachment language (insert, pouch flaps, straps, knee mounts) but still reads as fitted primitives in clay.
+
+Evidence: Blender `art/v02/renders/` (gitignored, local DCC); review set of record `game/assets/v02/shots/` (`gate_fps_kf16.png`, `gate_fps_ads.png`, `gate_fps_intersect.png`, `gate_kf16_receiver.png`, operator front/¾/back/sil/helmet/kit/wire).
+
+### Grip pass (2026-08-18) — not approved
+
+Production remains `000fc95`. Not deployed. Godot in-engine capture still held until the grip passes. Review shots for this pass are Blender FOV-75 workbench frames copied into `game/assets/v02/shots/` so they resolve inside the feature-branch commit.
+
+| Asset | Tris | Notes |
+| --- | ---: | --- |
+| FPS arms | **5704** | hm08 short extract. Budget ≤6k, not regressed. |
+| KF-16 | 4472 | Unchanged nodes: MuzzleFlash, ShellEject, Magazine, AdsAlign |
+
+Locked from earlier passes: palm plane-snap, contact-driven wrap-digit curl, single weapon-local pose, hip/ADS offsets, FOV 75.
+
+This pass (authored last-mile on the solver start): support palm on the handguard **left face**; trigger index two-segment swing through the guard; authored trigger thumb approach.
+
+**Still fail:** thumb web into the receiver; index in the guard opening but clips the guard wall; support C-grip structure with fingers through the top-left handguard corner; wrist cuff still hangs.
+
+Review shots: `gate_fps_hip.png`, `gate_fps_ads.png`, `gate_fps_trigger.png`, `gate_fps_support.png`, `gate_fps_wire.png`, `gate_fps_hands_wire.png`, `gate_fps_intersect.png`.
+
+Do not request Gate A / A2 approval on this pass.
 
 ## Infrastructure (non-blocking, this branch)
 

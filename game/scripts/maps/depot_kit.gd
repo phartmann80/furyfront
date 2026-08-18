@@ -12,11 +12,13 @@ func decorate_gate(root: Node3D) -> void:
 	kit.name = "GateKit"
 	root.add_child(kit)
 	_floor_plates(kit)
+	_wall_cladding(kit)
 	_security_doorway(kit)
 	_sandbags(kit)
 	_crates(kit)
 	_barriers(kit)
 	_signage(kit)
+	_branding(kit)
 	_fence(kit)
 	_cameras(kit)
 	_lights(kit)
@@ -55,10 +57,18 @@ func _mesh(parent: Node3D, named: String, size: Vector3, pos: Vector3, mat: Mate
 
 
 func _floor_plates(kit: Node3D) -> void:
-	var concrete := _mat("concrete", Color(0.34, 0.33, 0.31), 0.05, 0.9)
-	var metal := _mat("metal_floor", Color(0.22, 0.23, 0.24), 0.55, 0.45)
+	var concrete := _mat("concrete", Color(0.32, 0.31, 0.29), 0.04, 0.92)
+	var slab := _mat("concrete_slab", Color(0.36, 0.35, 0.32), 0.05, 0.88)
+	var metal := _mat("metal_floor", Color(0.2, 0.21, 0.22), 0.62, 0.42)
+	var paint := _mat("lane", Color(0.22, 0.22, 0.2), 0.08, 0.7)
 	_mesh(kit, "GateApron", Vector3(18, 0.04, 10), Vector3(0, 0.02, 32.5), concrete)
+	_mesh(kit, "ApronSeamA", Vector3(0.08, 0.05, 9.6), Vector3(-3.0, 0.03, 32.5), slab)
+	_mesh(kit, "ApronSeamB", Vector3(0.08, 0.05, 9.6), Vector3(3.0, 0.03, 32.5), slab)
+	_mesh(kit, "LaneL", Vector3(0.12, 0.05, 8.2), Vector3(-1.15, 0.035, 32.4), paint)
+	_mesh(kit, "LaneR", Vector3(0.12, 0.05, 8.2), Vector3(1.15, 0.035, 32.4), paint)
 	_mesh(kit, "GateThreshold", Vector3(6.2, 0.06, 1.4), Vector3(0, 0.04, 34.1), metal)
+	for i in range(8):
+		_mesh(kit, "Grate_%d" % i, Vector3(5.6, 0.03, 0.08), Vector3(0, 0.07, 33.55 + i * 0.14), metal)
 
 
 func _security_doorway(kit: Node3D) -> void:
@@ -93,10 +103,23 @@ func _crates(kit: Node3D) -> void:
 	_mesh(kit, "CrateC", Vector3(0.85, 0.65, 0.85), Vector3(7.4, 0.35, 31.1), wood)
 
 
+func _wall_cladding(kit: Node3D) -> void:
+	var panel := _mat("clad", Color(0.28, 0.29, 0.28), 0.18, 0.62)
+	var seam := _mat("clad_seam", Color(0.16, 0.17, 0.16), 0.4, 0.45)
+	for side in [-1.0, 1.0]:
+		_mesh(kit, "CladA", Vector3(4.6, 2.4, 0.08), Vector3(side * 8.0, 1.35, 33.28), panel)
+		_mesh(kit, "CladCap", Vector3(4.8, 0.12, 0.14), Vector3(side * 8.0, 2.62, 33.32), seam)
+		_mesh(kit, "CladBolt", Vector3(0.08, 0.08, 0.1), Vector3(side * 6.2, 2.2, 33.36), seam)
+
+
 func _barriers(kit: Node3D) -> void:
-	var concrete := _mat("jersey", Color(0.42, 0.41, 0.38), 0.02, 0.92)
+	var concrete := _mat("jersey", Color(0.4, 0.39, 0.36), 0.03, 0.9)
+	var cap := _mat("jersey_cap", Color(0.3, 0.3, 0.28), 0.08, 0.7)
 	_mesh(kit, "BarrierL", Vector3(2.4, 0.85, 0.42), Vector3(-6.2, 0.42, 27.8), concrete, 12.0)
+	_mesh(kit, "BarrierLCap", Vector3(2.5, 0.1, 0.48), Vector3(-6.2, 0.88, 27.8), cap, 12.0)
 	_mesh(kit, "BarrierR", Vector3(2.4, 0.85, 0.42), Vector3(6.2, 0.42, 27.8), concrete, -12.0)
+	_mesh(kit, "BarrierRCap", Vector3(2.5, 0.1, 0.48), Vector3(6.2, 0.88, 27.8), cap, -12.0)
+	_mesh(kit, "CoverBlock", Vector3(1.6, 1.05, 0.48), Vector3(-2.2, 0.52, 29.6), concrete)
 
 
 func _signage(kit: Node3D) -> void:
@@ -104,6 +127,15 @@ func _signage(kit: Node3D) -> void:
 	var amber := _mat("sign_lit", Color(0.08, 0.08, 0.07), 0.1, 0.4, Color(0.85, 0.55, 0.12))
 	_mesh(kit, "SignPanel", Vector3(1.8, 0.55, 0.06), Vector3(0, 2.55, 33.72), panel)
 	_mesh(kit, "SignBar", Vector3(1.55, 0.12, 0.04), Vector3(0, 2.55, 33.76), amber)
+
+
+func _branding(kit: Node3D) -> void:
+	var steel := _mat("ff_mark", Color(0.18, 0.19, 0.18), 0.35, 0.48)
+	# Fury Front F as silhouette bars — not a painted faction band.
+	_mesh(kit, "FFStem", Vector3(0.1, 0.7, 0.05), Vector3(-0.22, 2.05, 33.55), steel)
+	_mesh(kit, "FFTop", Vector3(0.42, 0.1, 0.05), Vector3(0.02, 2.35, 33.55), steel)
+	_mesh(kit, "FFMid", Vector3(0.3, 0.09, 0.05), Vector3(-0.02, 2.08, 33.55), steel)
+	_mesh(kit, "Plaque", Vector3(1.2, 0.22, 0.04), Vector3(0, 1.55, 33.52), steel)
 
 
 func _fence(kit: Node3D) -> void:

@@ -212,6 +212,24 @@ Biased to clearance over penetration: trigger palm/web push +X; index arc transl
 
 Do not request Gate A / A2 approval on this pass.
 
+### Receiving-geometry pass (2026-08-18) — not a pass candidate
+
+The pose loop could not converge: a ~20 mm gloved index cannot occupy a 7 mm well. This pass scales the KF-16 to the hand (winter trigger well + support-corner relief), then re-seats the same hm08 extracts. Interactive viewport posing remains withdrawn. Weapon JSON frozen. Nodes unchanged.
+
+| Region | Before (`7834f4a`) | After |
+| --- | --- | --- |
+| Guard well X (inner) | 7 mm | authored through-cut 55 mm (side `outboard_sd` +11.7 mm) |
+| Opening YZ (authored cut) | 22 × 16 mm | 36 × 38 mm, placed forward of the grip |
+| Support top-left | left face x ≈ −17 mm, unchamfered top | left face x ≈ −11.5 mm; rail-profile chamfer + extra left-top bite |
+| KF-16 tris | 4472 | **4628** (≤8k) |
+| FPS arms tris | 5704 | **5704** (≤6k) |
+
+Nodes (unchanged): MuzzleFlash Godot `(0, 0.028, -0.58)`; ShellEject `(0.04, 0.04, -0.04)`; Magazine Blender `(0, 0.055, -0.068)`; AdsAlign Godot `(0, 0.078, -0.02)`.
+
+**Own review: still fail.** Index tip reports near the well but `gate_fps_trigger.png` still shows the shaft through the guard wall. Support fingers still clip the handguard corner in `gate_fps_support.png`. Thumb web clearance restored (`min_sd=+0.0024`). Cuff unchanged from clearance pass.
+
+Do not request Gate A / A2 approval on this pass.
+
 ## Infrastructure (non-blocking, this branch)
 
 - nginx: remove duplicate `mp4` MIME under `/media/` (inherit `mime.types`). No routing change. No TuGPT change. Reload, not restart.

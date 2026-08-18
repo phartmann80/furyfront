@@ -364,15 +364,17 @@ def add_cyl(name, loc, radius, depth, rot=(math.pi / 2, 0.0, 0.0), verts=16) -> 
     return ob
 
 
-def boolean_cut(obj, cutter) -> None:
+def boolean_cut(obj, cutter, solver="EXACT") -> None:
     active(obj)
+    n0 = len(obj.data.vertices)
     m = obj.modifiers.new("Cut", "BOOLEAN")
     m.operation = "DIFFERENCE"
     m.object = cutter
     # Blender 4.5.10 enum: FAST, EXACT, MANIFOLD.
-    m.solver = "EXACT"
+    m.solver = solver
     try:
         apply_mods(obj)
+        print(f"BOOL {cutter.name} solver={solver} verts {n0}->{len(obj.data.vertices)}", flush=True)
     except Exception as exc:
         print("boolean skip", cutter.name, exc, flush=True)
         if "Cut" in obj.modifiers:
@@ -530,6 +532,10 @@ def godot_to_blender(g: Vector) -> Vector:
     Blender (x, y, z) exports as glTF/Godot (x, z, -y). Inverse: (gx, -gz, gy).
     """
     return Vector((g.x, -g.z, g.y))
+
+
+def blender_to_godot(b: Vector) -> Vector:
+    return Vector((b.x, b.z, -b.y))
 
 
 def apply_macros(svc, human, **kwargs) -> None:
@@ -1225,6 +1231,96 @@ def profile_mesh(name, pts_yz, half_x, segs=1) -> bpy.types.Object:
     return ob
 
 
+def relieve_handguard_for_support(body) -> None:
+    """Rail-profile top chamfer (both sides) plus extra left-edge bite at the wrap.
+
+    Symmetric chamfer reads as a manufactured rail in hero/left/right. Extra
+    left-top inset is the occluded strip under the support fingers.
+    """
+    bm = bmesh_of(body)
+    for v in bm.verts:
+        y, z, x = v.co.y, v.co.z, v.co.x
+        if not (0.14 < y < 0.40):
+            continue
+        if z > 0.018:
+            t = min(1.0, (z - 0.018) / 0.032)
+            v.co.x *= 1.0 - 0.50 * t
+        if x < 0.0 and 0.165 < y < 0.300 and z > 0.022:
+            t = min(1.0, (z - 0.022) / 0.028)
+            wy = 1.0 - abs(y - 0.218) / 0.070
+            w = max(0.0, wy) * t
+            v.co.x += 0.008 * w
+    commit_bm(bm, body)
+
+
+def _probe_open_span(bvh, sign, origin, axis, limit=0.08, step=0.001) -> float:
+    """Distance from origin along ±axis until signed distance goes negative (hits metal)."""
+    axis = Vector(axis).normalized()
+    hit = limit
+    for sgn in (1.0, -1.0):
+        for i in range(1, int(limit / step) + 1):
+            p = origin + axis * (sgn * i * step)
+            if nearest(bvh, p, sign)[2] < 0.0:
+                hit = min(hit, i * step)
+                break
+    return 2.0 * hit
+
+
+def report_kf16_receiving(metal) -> None:
+    """Print well / corner extents after boolean + bevel (checkpoint evidence)."""
+    bvh = bvh_of(metal)
+    sign = bvh_sign(bvh)
+    origin = Vector((0.0, 0.024, -0.032))
+    fwd = Vector((0.0, 0.032, -0.034))
+    sd0 = nearest(bvh, origin, sign)[2]
+    sdf = nearest(bvh, fwd, sign)[2]
+    span_x = _probe_open_span(bvh, sign, fwd, (1.0, 0.0, 0.0))
+    span_y = _probe_open_span(bvh, sign, fwd, (0.0, 1.0, 0.0), limit=0.04)
+    span_z = _probe_open_span(bvh, sign, fwd, (0.0, 0.0, 1.0), limit=0.04)
+    side = Vector((0.022, 0.032, -0.034))
+    print(
+        f"RECV well_center sd={sd0:.4f} fwd_sd={sdf:.4f} open_x={span_x:.4f} "
+        f"open_y={span_y:.4f} open_z={span_z:.4f} outboard_sd={nearest(bvh, side, sign)[2]:.4f} "
+        f"(before 0.007 / 0.022 / 0.016)",
+        flush=True,
+    )
+    pts = [v.co.copy() for v in metal.data.vertices]
+    corner = [p for p in pts if -0.050 <= p.x <= 0.012 and 0.16 <= p.y <= 0.32 and 0.018 <= p.z <= 0.062]
+    if corner:
+        left = [p for p in corner if p.x < 0.0]
+        top_left = [p for p in left if p.z > 0.030]
+        lx = min(p.x for p in left) if left else 0.0
+        tlx = min(p.x for p in top_left) if top_left else lx
+        tz = max(p.z for p in top_left) if top_left else 0.0
+        print(
+            f"RECV corner left_face_x={lx:.4f} top_left_x={tlx:.4f} top_left_z={tz:.4f} "
+            f"(before left_face~-0.017 top unchamfered)",
+            flush=True,
+        )
+    print(
+        "RECV authored tg_cut FAST on body (0.055, 0.036, 0.038) at (0, 0.038, -0.036) — forward of grip",
+        flush=True,
+    )
+
+
+def report_kf16_nodes(root) -> None:
+    bpy.context.view_layer.update()
+    wanted = ("MuzzleFlash", "ShellEject", "Magazine", "AdsAlign")
+    print("KF16 NODES (Blender local / Godot)", flush=True)
+    for name in wanted:
+        ob = next((o for o in [root] + list(root.children_recursive) if o.name == name), None)
+        if ob is None:
+            print(f"  {name} MISSING", flush=True)
+            continue
+        loc = Vector(ob.location)
+        g = blender_to_godot(loc)
+        print(
+            f"  {name} blender={tuple(round(c, 4) for c in loc)} "
+            f"godot={tuple(round(c, 4) for c in g)}",
+            flush=True,
+        )
+
+
 def kf16_build(metal_mat, poly_mat) -> tuple[bpy.types.Object, dict]:
     """Original KF-16 as one readable service-rifle silhouette.
 
@@ -1252,6 +1348,9 @@ def kf16_build(metal_mat, poly_mat) -> tuple[bpy.types.Object, dict]:
             t = min(1.0, (v.co.y - 0.14) / 0.26)
             v.co.x *= 1.0 - 0.12 * t
     commit_bm(bm, body)
+    relieve_handguard_for_support(body)
+    # Widen the existing grip/magwell gap on the body alone (manifold extrusion).
+    boolean_cut(body, add_box("tg_cut", (0.0, 0.038, -0.036), (0.055, 0.036, 0.038)), solver="FAST")
     # Barrel continues the handguard; overlaps the front so the seam reads as a joint.
     barrel = add_cyl("bar", (0.0, 0.44, 0.026), 0.0088, 0.36, (math.pi / 2, 0.0, 0.0), 18)
     chamber = add_cyl("chm", (0.0, 0.30, 0.026), 0.0115, 0.08, (math.pi / 2, 0.0, 0.0), 16)
@@ -1263,17 +1362,20 @@ def kf16_build(metal_mat, poly_mat) -> tuple[bpy.types.Object, dict]:
     ch = add_box("ch", (0.0, -0.10, 0.050), (0.007, 0.048, 0.007))
     cht = add_box("cht", (0.024, -0.122, 0.050), (0.040, 0.010, 0.007))
     sel = add_cyl("sel", (0.019, -0.04, 0.004), 0.006, 0.009, (0.0, math.pi / 2, 0.0), 10)
-    tg = add_box("tg", (0.0, 0.006, -0.034), (0.007, 0.036, 0.022))
-    trig = add_box("trig", (0.0, 0.004, -0.018), (0.004, 0.007, 0.016), (math.radians(10), 0.0, 0.0))
     metal = join_objects(
         "kf16_metal",
-        [body, barrel, chamber, muzzle, optic, hood, rail, ch, cht, sel, tg, trig] + teeth,
+        [body, barrel, chamber, muzzle, optic, hood, rail, ch, cht, sel] + teeth,
     )
     boolean_cut(metal, add_box("eject_cut", (0.020, 0.03, 0.030), (0.016, 0.048, 0.018)))
     boolean_cut(metal, add_box("well_cut", (0.0, 0.055, -0.038), (0.020, 0.024, 0.046)))
-    boolean_cut(metal, add_box("tg_cut", (0.0, 0.006, -0.028), (0.010, 0.022, 0.016)))
     finish_hard(metal, 0.0048, 3)
+    tg_bot = add_box("tg_bot", (0.0, 0.038, -0.058), (0.016, 0.036, 0.008))
+    trig = add_box("trig", (0.0, 0.028, -0.026), (0.004, 0.007, 0.014), (math.radians(8), 0.0, 0.0))
+    assign_mat(tg_bot, metal_mat)
+    assign_mat(trig, metal_mat)
+    metal = join_objects("kf16_metal", [metal, tg_bot, trig])
     assign_mat(metal, metal_mat)
+    shade_auto(metal)
 
     mag = add_box("Magazine", (0.0, 0.055, -0.068), (0.018, 0.026, 0.092))
     active(mag)
@@ -1299,13 +1401,18 @@ def kf16_build(metal_mat, poly_mat) -> tuple[bpy.types.Object, dict]:
     ads = empty("AdsAlign", tuple(godot_to_blender(Vector((0.0, 0.078, -0.02)))))
     for e in (mz, se, ads):
         e.parent = root
+    bpy.context.view_layer.update()
+    report_kf16_receiving(metal)
+    report_kf16_nodes(root)
     t, v = count_tree(root)
+    print(f"KF-16 tris={t} verts={v} budget<=8000 {'OK' if t <= 8000 else 'OVER'}", flush=True)
     return root, {
         "tris": t,
         "verts": v,
         "nodes": ["MuzzleFlash", "ShellEject", "Magazine", "AdsAlign"],
         "grip_local": (0.030, -0.012, -0.058),
         "handguard_local": (-0.026, 0.22, 0.016),
+        "budget_ok": t <= 8000,
     }
 
 
@@ -1848,7 +1955,7 @@ def authored_hinge(ob, idxs, pivot, axis, want, amount, label):
 
 
 def pose_index_two_segment(ob, idxs, palm, along, across, out, bvh, sign):
-    """Trigger index: seat at the opening, then translate the whole arc outboard of the guard wall."""
+    """Trigger index: two-segment path into the winter well. Slight +X clearance, not outboard of the wall."""
     del bvh, sign, out
     if len(idxs) < 6:
         print("INDEX skipped", flush=True)
@@ -1856,8 +1963,8 @@ def pose_index_two_segment(ob, idxs, palm, along, across, out, bvh, sign):
     palm = Vector(palm)
     along, across = Vector(along), Vector(across)
     kn = palm + along * 0.008 + across * 0.020
-    waypoint = Vector((0.008, 0.018, -0.024))
-    trigger = Vector((0.004, 0.005, -0.016))
+    waypoint = Vector((0.012, 0.032, -0.034))
+    trigger = Vector((0.006, 0.028, -0.026))
     tip_i = _tip_index(ob, idxs, palm, along)
     pose_digit_to_target(ob, idxs, kn, waypoint, "INDEX-swing", t=0.90)
     scored = sorted(idxs, key=lambda i: (ob.data.vertices[i].co - ob.data.vertices[tip_i].co).length)
@@ -1867,10 +1974,10 @@ def pose_index_two_segment(ob, idxs, palm, along, across, out, bvh, sign):
     mid = ob.data.vertices[mid_i].co.copy()
     pose_digit_to_target(ob, dist, mid, trigger, "INDEX-in", t=0.70)
     for i in idxs:
-        ob.data.vertices[i].co.x += 0.006
+        ob.data.vertices[i].co.x += 0.002
     ob.data.update()
     tip = ob.data.vertices[tip_i].co
-    opening = abs(tip.x) < 0.014 and -0.016 < tip.y < 0.030 and -0.044 < tip.z < -0.004
+    opening = abs(tip.x) < 0.022 and -0.012 < tip.y < 0.032 and -0.052 < tip.z < -0.010
     print(
         f"INDEX final tip={tuple(round(c, 3) for c in tip)} "
         f"to_lip={(tip - trigger).length:.4f} at_opening={opening}",
@@ -1912,7 +2019,7 @@ def pose_contact_hand(
     else:
         for name in wrap:
             for i in groups.get(name, []):
-                ob.data.vertices[i].co += Vector(plane_n) * 0.007
+                ob.data.vertices[i].co += Vector(plane_n) * 0.006
         ob.data.update()
         pose_support_cuff(ob, palm, along, across)
     thumb = groups.get("thumb", [])
@@ -1929,7 +2036,7 @@ def pose_contact_hand(
 
 
 def posed_trigger_hand(glove_mat, body, bvh, sign) -> list:
-    """Right hm08 hand. Palm on the grip side with clearance; authored outboard index; distal thumb."""
+    """Right hm08 hand. Palm on the grip side with clearance; index into the winter well; distal thumb."""
     across, along, out = _hand_axes(
         (0.94, -0.34, -0.08),
         (0.06, 0.02, -0.99),
@@ -2150,6 +2257,7 @@ def build_kf16(out_glb, render_dir, src_dir) -> dict:
     render_previews(render_dir, "kf16_right.png", (0.62, 0.16, 0.14), look, [root], lens=55)
     render_previews(render_dir, "kf16_hero.png", (0.42, -0.22, 0.22), look, [root], lens=50)
     render_previews(render_dir, "kf16_close.png", (0.14, 0.00, 0.08), (0.0, 0.02, 0.02), [root], lens=70)
+    render_previews(render_dir, "kf16_well.png", (0.14, 0.028, -0.012), (0.0, 0.024, -0.032), [root], lens=55)
     render_previews(render_dir, "kf16_wire.png", (0.42, -0.22, 0.22), look, [root], wire=True, lens=50)
     save_blend(os.path.join(src_dir, "kf16.blend"))
     return {
@@ -2314,7 +2422,7 @@ def main() -> None:
         record(
             build_kf16(os.path.join(glb_dir, "ff_wpn_kf16.glb"), renders, src),
             "ff_wpn_kf16.glb",
-            "Gate A2 clay: unified KF-16 receiver/handguard/stock/magwell profile",
+            "Gate A2 clay: KF-16 winter trigger well + support-corner relief (receiving geo)",
         )
     if only in {"all", "arms"}:
         print("BUILD ff_fps_arms", flush=True)

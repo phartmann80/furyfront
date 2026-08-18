@@ -37,14 +37,14 @@ Only resulting game meshes (GLB) are intended to ship.
 
 ### Current GLBs (Godot 4.7.1 imported, Gate A2 clay)
 
-Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms GLB and grip shots updated 2026-08-18. Counts from `godot_import_stats.json` / Blender export.
+Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms and KF-16 receiving-geo pass 2026-08-18. Counts from Blender export (Godot recapture still held).
 
 | asset_id | tris | verts | source body tris | GLB | notes |
 | --- | ---: | ---: | ---: | ---: | --- |
 | ff_op_assault | 38070 | 19191 | 26752 | 906 KB | hm08 + thicker carrier / pouches / straps; full body kept |
 | ff_sb_phantom | 35506 | 17863 | 26752 | 838 KB | leaner macros; X-harness, sternum, proud pack |
-| ff_wpn_kf16 | 4472 | 2264 | — | 115 KB | unified profile; MuzzleFlash, ShellEject, Magazine, AdsAlign |
-| ff_fps_arms | 5704 | 2856 | — | 135 KB | hm08 short extract, weapon-local, parented to KF-16 |
+| ff_wpn_kf16 | 4628 | 2344 | — | 121 KB | winter trigger well + support-corner relief; nodes unchanged |
+| ff_fps_arms | 5704 | 2856 | — | 135 KB | hm08 short extract re-seated after receiving-geo edit |
 
 No textures, no production materials, no rig. Weapon balance JSON untouched. Collision/nav hulls untouched.
 

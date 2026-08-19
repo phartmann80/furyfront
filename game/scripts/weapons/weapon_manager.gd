@@ -36,14 +36,14 @@ func setup(weapon_ids: Array) -> void:
 
 
 func _build_kf16() -> void:
-	_rig = _V02.instance_scene(_V02.KF16)
+	_rig = _V02.instance_scene(_V02.KF16, "weapon")
 	if _rig == null:
 		_rig = Node3D.new()
 		_rig.name = "Kf16Rig"
 		_fallback_boxes(_rig)
 	_rig.name = "Kf16Rig"
 	add_child(_rig)
-	var arms := _V02.instance_scene(_V02.ARMS)
+	var arms := _V02.instance_scene(_V02.ARMS, "arms")
 	if arms:
 		arms.name = "FpsArmsClay"
 		_rig.add_child(arms)

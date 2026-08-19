@@ -50,6 +50,8 @@ Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms 
 
 No textures, no production materials, no rig. Weapon balance JSON untouched. Collision/nav hulls untouched.
 
+Play-path ship materials (2026-08-19): original 256px procedural albedos in `game/assets/v02/mat/` (weave, grit, leather, visor, poly, metal), applied at instance time with triplanar mapping. Not photos, not Meshy.
+
 **Hidden-geo strategy:** kit shrinkwraps onto an armless wrap cage. Covered body verts (under armor/harness/helmet, minus face/neck/hands/feet/shoulders/elbows/knees) are collapse-decimated for LOD0. LOD2 is a full-mesh collapse of the joined character to the combat-distance cap. FPS arms remain a separate 1P viewmodel.
 
 Blend sources: `art/v02/src/` (local DCC, not in git). Blender clay: `art/v02/renders/` (gitignored). Review shots: `game/assets/v02/shots/` (excluded from Web export). Grip-checkpoint frames in that folder are the current Blender FOV-75 workbench captures; Godot in-engine recapture is held until the grip passes.

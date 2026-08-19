@@ -22,6 +22,8 @@ func decorate_gate(root: Node3D) -> void:
 	_fence(kit)
 	_cameras(kit)
 	_lights(kit)
+	_courtyard_fill(kit)
+	_watch_and_wires(kit)
 	var pres = _GatePresentation.new()
 	pres.name = "GatePresentation"
 	kit.add_child(pres)
@@ -159,3 +161,51 @@ func _lights(kit: Node3D) -> void:
 	var housing := _mat("lamp", Color(0.2, 0.2, 0.18), 0.5, 0.4)
 	_mesh(kit, "LampL", Vector3(0.22, 0.12, 0.35), Vector3(-4.8, 3.35, 33.6), housing)
 	_mesh(kit, "LampR", Vector3(0.22, 0.12, 0.35), Vector3(4.8, 3.35, 33.6), housing)
+
+
+func _courtyard_fill(kit: Node3D) -> void:
+	# Visual only. Keep the gate mouth (-3..3 at z≈34) and staging lane clear.
+	var hesco := _mat("hesco", Color(0.42, 0.38, 0.28), 0.02, 0.94)
+	var rust := _mat("drum", Color(0.28, 0.16, 0.08), 0.18, 0.62)
+	var pallet := _mat("pallet", Color(0.34, 0.24, 0.14), 0.0, 0.9)
+	var cone := _mat("cone", Color(0.62, 0.28, 0.08), 0.04, 0.7)
+	var chev := _mat("chevron", Color(0.55, 0.42, 0.10), 0.06, 0.55)
+	for i in range(4):
+		_mesh(kit, "HescoL_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(-10.4, 0.52, 29.2 + i * 1.35), hesco)
+		_mesh(kit, "HescoR_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(10.4, 0.52, 29.2 + i * 1.35), hesco)
+	for i in range(3):
+		_mesh(kit, "DrumL_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(-8.6, 0.38, 28.4 + i * 0.55), rust)
+		_mesh(kit, "DrumR_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(8.8, 0.38, 28.2 + i * 0.55), rust)
+	_mesh(kit, "PalletA", Vector3(1.2, 0.14, 0.8), Vector3(-8.9, 0.08, 31.9), pallet, 8.0)
+	_mesh(kit, "PalletB", Vector3(1.2, 0.14, 0.8), Vector3(-8.9, 0.22, 31.9), pallet, 8.0)
+	_mesh(kit, "PalletC", Vector3(1.15, 0.14, 0.75), Vector3(8.6, 0.08, 32.4), pallet, -12.0)
+	for i in range(5):
+		_mesh(kit, "Chevron_%d" % i, Vector3(0.55, 0.02, 0.16), Vector3(-2.4 + i * 1.2, 0.045, 31.1), chev)
+	_mesh(kit, "ConeL", Vector3(0.22, 0.55, 0.22), Vector3(-3.6, 0.28, 32.2), cone)
+	_mesh(kit, "ConeR", Vector3(0.22, 0.55, 0.22), Vector3(3.6, 0.28, 32.2), cone)
+	var bag := _mat("sandbag", Color(0.45, 0.4, 0.28), 0.0, 0.95)
+	for i in range(4):
+		_mesh(kit, "BagRowL_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(-5.1 + (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag)
+		_mesh(kit, "BagRowR_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(5.1 - (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag)
+
+
+func _watch_and_wires(kit: Node3D) -> void:
+	var steel := _mat("steel", Color(0.18, 0.19, 0.2), 0.7, 0.38)
+	var cable := _mat("cable", Color(0.08, 0.08, 0.08), 0.15, 0.55)
+	var lamp := _mat("flood", Color(0.22, 0.22, 0.2), 0.45, 0.4)
+	# Watchtower at (10, 6, 30) is a hull; this is cladding only.
+	_mesh(kit, "TowerClad", Vector3(4.15, 3.4, 0.08), Vector3(10.0, 3.4, 27.95), steel)
+	_mesh(kit, "TowerCladR", Vector3(0.08, 3.4, 4.15), Vector3(12.05, 3.4, 30.0), steel)
+	_mesh(kit, "FloodPoleL", Vector3(0.12, 4.2, 0.12), Vector3(-11.6, 2.1, 33.8), steel)
+	_mesh(kit, "FloodHeadL", Vector3(0.55, 0.18, 0.35), Vector3(-11.6, 4.28, 33.55), lamp)
+	_mesh(kit, "FloodPoleR", Vector3(0.12, 4.2, 0.12), Vector3(11.6, 2.1, 33.8), steel)
+	_mesh(kit, "FloodHeadR", Vector3(0.55, 0.18, 0.35), Vector3(11.6, 4.28, 33.55), lamp)
+	for i in range(6):
+		_mesh(kit, "Cable_%d" % i, Vector3(9.5, 0.04, 0.04), Vector3(0.0, 3.05, 33.22 + i * 0.06), cable)
+	var post := _mat("fence", Color(0.16, 0.17, 0.16), 0.6, 0.42)
+	for x in [-18.0, 18.0]:
+		_mesh(kit, "FenceWing_%d" % int(x), Vector3(0.12, 2.4, 0.12), Vector3(x, 1.2, 41.35), post)
+		_mesh(kit, "FenceWingRail_%d" % int(x), Vector3(5.6, 0.06, 0.04), Vector3(x + (2.8 if x < 0.0 else -2.8), 1.8, 41.35), post)
+	for i in range(8):
+		_mesh(kit, "Razor_%d" % i, Vector3(4.8, 0.05, 0.05), Vector3(-9.6 + i * 2.4, 2.42, 41.38), post)
+

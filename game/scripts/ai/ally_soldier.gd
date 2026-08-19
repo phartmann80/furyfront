@@ -1,6 +1,8 @@
 class_name AllySoldier
 extends CharacterBody3D
 
+const _V02 := preload("res://scripts/v02/v02_visuals.gd")
+
 const GRAVITY := 22.0
 const FOLLOW_DIST := 4.8
 const ENGAGE_RANGE := 32.0
@@ -28,16 +30,21 @@ func setup(origin: Vector3, slot: int = 0) -> void:
 	col.shape = cap
 	col.position = Vector3(0, 0.9, 0)
 	add_child(col)
-	var mi := MeshInstance3D.new()
-	var cm := CapsuleMesh.new()
-	cm.radius = 0.32
-	cm.height = 1.8
-	mi.mesh = cm
-	mi.position = Vector3(0, 0.9, 0)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.28, 0.32, 0.22)
-	mi.material_override = mat
-	add_child(mi)
+	var vis := _V02.character(true)
+	if vis:
+		vis.name = "Visual"
+		add_child(vis)
+	else:
+		var mi := MeshInstance3D.new()
+		var cm := CapsuleMesh.new()
+		cm.radius = 0.32
+		cm.height = 1.8
+		mi.mesh = cm
+		mi.position = Vector3(0, 0.9, 0)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.28, 0.32, 0.22)
+		mi.material_override = mat
+		add_child(mi)
 
 
 func _physics_process(delta: float) -> void:
@@ -65,6 +72,11 @@ func _physics_process(delta: float) -> void:
 			dest = _follow_point(player)
 	_move_to(dest)
 	move_and_slide()
+	if enemy:
+		var look := enemy.global_position - global_position
+		look.y = 0.0
+		if look.length_squared() > 0.0001:
+			look_at(global_position + look.normalized(), Vector3.UP)
 
 
 func _follow_point(player: Node3D) -> Vector3:

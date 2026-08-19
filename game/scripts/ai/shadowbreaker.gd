@@ -1,6 +1,8 @@
 class_name Shadowbreaker
 extends CharacterBody3D
 
+const _V02 := preload("res://scripts/v02/v02_visuals.gd")
+
 enum State { IDLE, PATROL, SUSPICIOUS, INVESTIGATE, ENGAGE, SEARCH, COVER, FLANK, RETREAT }
 
 const GRAVITY := 22.0
@@ -62,6 +64,26 @@ func _make_body() -> void:
 	col.shape = cap
 	col.position = Vector3(0, height * 0.5, 0)
 	add_child(col)
+	var vis := _V02.character(false)
+	if vis:
+		vis.name = "Visual"
+		match archetype_id:
+			"sb_enforcer":
+				vis.scale = Vector3(1.12, 1.06, 1.12)
+			"sb_hacker":
+				vis.scale = Vector3(0.96, 0.96, 0.96)
+			"sb_commander":
+				vis.scale = Vector3(1.08, 1.08, 1.08)
+		add_child(vis)
+	else:
+		_capsule_visual(radius, height)
+		if archetype_id == "sb_phantom":
+			_phantom_kit(height)
+	_hitbox("hit_head", Vector3(0, height * 0.9, 0), 0.16 if archetype_id != "sb_phantom" else 0.14, 8)
+	_hitbox("hit_limb", Vector3(0.22, 0.4, 0), 0.14, 16)
+
+
+func _capsule_visual(radius: float, height: float) -> void:
 	var mi := MeshInstance3D.new()
 	var cm := CapsuleMesh.new()
 	cm.radius = radius
@@ -83,10 +105,6 @@ func _make_body() -> void:
 			mat.roughness = 0.42
 	mi.material_override = mat
 	add_child(mi)
-	if archetype_id == "sb_phantom":
-		_phantom_kit(height)
-	_hitbox("hit_head", Vector3(0, height * 0.9, 0), 0.16 if archetype_id != "sb_phantom" else 0.14, 8)
-	_hitbox("hit_limb", Vector3(0.22, 0.4, 0), 0.14, 16)
 
 
 func _phantom_kit(height: float) -> void:

@@ -1,6 +1,8 @@
 class_name WeaponManager
 extends Node3D
 
+const _V02 := preload("res://scripts/v02/v02_visuals.gd")
+
 var ids: PackedStringArray = []
 var idx: int = 0
 var mag: int = 0
@@ -11,9 +13,10 @@ var recoil_pitch := 0.0
 var _last_fire := -999.0
 var _pattern_i := 0
 var _rig: Node3D
-var _muzzle: Marker3D
-var _shell: Marker3D
-var _mag: MeshInstance3D
+var _muzzle: Node3D
+var _shell: Node3D
+var _mag: Node3D
+var _mag_rest_y := 0.0
 var _hitscan: HitscanSystem
 var _ads_t := 0.0
 var punch := Vector3.ZERO
@@ -33,29 +36,48 @@ func setup(weapon_ids: Array) -> void:
 
 
 func _build_kf16() -> void:
-	_rig = Node3D.new()
+	_rig = _V02.instance_scene(_V02.KF16)
+	if _rig == null:
+		_rig = Node3D.new()
+		_rig.name = "Kf16Rig"
+		_fallback_boxes(_rig)
 	_rig.name = "Kf16Rig"
 	add_child(_rig)
-	# Placeholder KF-16: named parts + attachment points. Stats stay in weapons.json.
-	_part(_rig, Vector3(0.052, 0.078, 0.28), Vector3(0, 0.012, 0.04), Color(0.11, 0.12, 0.13), 0.62) # receiver
-	_part(_rig, Vector3(0.046, 0.038, 0.22), Vector3(0, 0.008, -0.18), Color(0.14, 0.15, 0.16), 0.5) # handguard
-	_part(_rig, Vector3(0.022, 0.022, 0.30), Vector3(0, 0.028, -0.38), Color(0.2, 0.2, 0.21), 0.75) # barrel
-	_part(_rig, Vector3(0.034, 0.034, 0.05), Vector3(0, 0.028, -0.54), Color(0.16, 0.16, 0.17), 0.7) # muzzle
-	_part(_rig, Vector3(0.038, 0.05, 0.14), Vector3(0, 0.0, 0.22), Color(0.09, 0.09, 0.1), 0.45) # stock tube
-	_part(_rig, Vector3(0.03, 0.1, 0.048), Vector3(0, -0.082, 0.02), Color(0.15, 0.13, 0.1), 0.2) # pistol grip
-	_part(_rig, Vector3(0.018, 0.036, 0.07), Vector3(0, 0.062, -0.06), Color(0.07, 0.08, 0.08), 0.3) # optic
-	_part(_rig, Vector3(0.028, 0.018, 0.04), Vector3(0, 0.084, -0.05), Color(0.05, 0.06, 0.07), 0.15) # sight window
-	_mag = _part(_rig, Vector3(0.028, 0.11, 0.05), Vector3(0, -0.09, -0.02), Color(0.1, 0.11, 0.1), 0.35)
-	_mag.name = "Magazine"
-	_muzzle = Marker3D.new()
-	_muzzle.name = "MuzzleFlash"
-	_muzzle.position = Vector3(0.0, 0.028, -0.58)
-	_rig.add_child(_muzzle)
-	_shell = Marker3D.new()
-	_shell.name = "ShellEject"
-	_shell.position = Vector3(0.04, 0.04, -0.04)
-	_rig.add_child(_shell)
+	var arms := _V02.instance_scene(_V02.ARMS)
+	if arms:
+		arms.name = "FpsArmsClay"
+		_rig.add_child(arms)
+		arms.position = Vector3.ZERO
+	_muzzle = _marker("MuzzleFlash", Vector3(0.0, 0.028, -0.58))
+	_shell = _marker("ShellEject", Vector3(0.04, 0.04, -0.04))
+	_mag = _V02.named(_rig, "Magazine") as Node3D
+	if _mag:
+		_mag_rest_y = _mag.position.y
 	_rig.position = _hip
+
+
+func _fallback_boxes(root: Node3D) -> void:
+	_part(root, Vector3(0.052, 0.078, 0.28), Vector3(0, 0.012, 0.04), Color(0.11, 0.12, 0.13), 0.62)
+	_part(root, Vector3(0.046, 0.038, 0.22), Vector3(0, 0.008, -0.18), Color(0.14, 0.15, 0.16), 0.5)
+	_part(root, Vector3(0.022, 0.022, 0.30), Vector3(0, 0.028, -0.38), Color(0.2, 0.2, 0.21), 0.75)
+	_part(root, Vector3(0.034, 0.034, 0.05), Vector3(0, 0.028, -0.54), Color(0.16, 0.16, 0.17), 0.7)
+	_part(root, Vector3(0.038, 0.05, 0.14), Vector3(0, 0.0, 0.22), Color(0.09, 0.09, 0.1), 0.45)
+	_part(root, Vector3(0.03, 0.1, 0.048), Vector3(0, -0.082, 0.02), Color(0.15, 0.13, 0.1), 0.2)
+	_part(root, Vector3(0.018, 0.036, 0.07), Vector3(0, 0.062, -0.06), Color(0.07, 0.08, 0.08), 0.3)
+	_part(root, Vector3(0.028, 0.018, 0.04), Vector3(0, 0.084, -0.05), Color(0.05, 0.06, 0.07), 0.15)
+	var mag := _part(root, Vector3(0.028, 0.11, 0.05), Vector3(0, -0.09, -0.02), Color(0.1, 0.11, 0.1), 0.35)
+	mag.name = "Magazine"
+
+
+func _marker(named: String, fallback: Vector3) -> Node3D:
+	var n := _V02.named(_rig, named) as Node3D
+	if n:
+		return n
+	var m := Marker3D.new()
+	m.name = named
+	m.position = fallback
+	_rig.add_child(m)
+	return m
 
 
 func _part(parent: Node3D, size: Vector3, pos: Vector3, color: Color, metallic: float = 0.45) -> MeshInstance3D:
@@ -104,9 +126,9 @@ func _pose(_delta: float, ads: bool, move_vel: Vector3, sprinting: bool = false)
 	if reloading:
 		rest += Vector3(0.05, -0.11, 0.07)
 		if _mag:
-			_mag.position.y = -0.16
+			_mag.position.y = _mag_rest_y - 0.07
 	elif _mag:
-		_mag.position.y = -0.09
+		_mag.position.y = _mag_rest_y
 	_rig.position = rest + sway + punch
 	_rig.rotation_degrees = Vector3(punch.z * 62.0, sway.x * 20.0 + punch.x * 18.0, sway.y * -18.0)
 
@@ -218,6 +240,8 @@ func _apply_index(i: int) -> void:
 	recoil_yaw = 0.0
 	EventBus.weapon_changed.emit(str(w.get("id", "")))
 	EventBus.ammo_changed.emit(mag, reserve)
+	if _rig:
+		_rig.visible = str(w.get("fireMode", "")) != "melee"
 
 
 func _kick(w: Dictionary) -> void:

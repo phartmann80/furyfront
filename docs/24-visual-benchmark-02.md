@@ -287,6 +287,47 @@ Evidence: `game/assets/v02/shots/gate_phantom.png`, `gate_phantom_34.png`, `gate
 
 Do not request Gate A / A2 approval on this pass.
 
+### Hidden-body collapse + LOD (2026-08-18) — not a pass candidate
+
+Cummerbund first (Assault only), then covered-vert collapse, then LOD2. Boots left for the form-polish pass so LOD0 silhouette could stay locked to the kit checkpoints. KF-16 / FPS arms frozen at `7cbad49`.
+
+#### LOD0 (review distance — same cameras as kit checkpoints)
+
+| Asset | LOD0 tris | Body after collapse | Kit tris | Pieces | LOD0 GLB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Assault | **36234** | 21576 (was 26752) | 14658 | 39 | 891 KB |
+| Phantom | **32912** | 21730 (was 26752) | 11182 | 31 | 797 KB |
+
+Assault cummerbund is in the kit total. Hide set is verts under kit + carrier/harness band + scalp; protect stays face / neck / hands / feet / shoulders / elbows / knees.
+
+**LOD0 vs target:** Assault 36.2k vs ~22–25k, Phantom 32.9k vs ~16–18k. The miss is the legal floor, not an incomplete collapse: kit survives (~14.7k / ~11.2k), and the remaining body is deform-dense regions plus visible limbs. Collapsing further would mean thinning hands, feet, face, or joints, which this workstream forbids. Next time LOD0 can move is a kit-tri cut on the form-polish pass, not another hidden-body pass.
+
+LOD0 evidence: `gate_assault.png`, `gate_assault_34.png`, `gate_assault_back.png`, `gate_assault_helmet.png`, `gate_assault_kit.png`, `gate_assault_wire.png`, and the matching `gate_phantom_*` set, plus `gate_silhouette.png`.
+
+#### LOD2 (combat workhorse — mid-range ~10 m, not close-ups)
+
+| Asset | LOD2 tris | Cap | LOD2 GLB |
+| --- | ---: | ---: | ---: |
+| Assault | **3999** | ≤4k | 126 KB |
+| Phantom | **3500** | ≤3.5k | 109 KB |
+
+LOD2 evidence: `gate_assault_lod2.png`, `gate_assault_lod2_wire.png`, `gate_assault_lod2_34.png`, `gate_phantom_lod2.png`, `gate_phantom_lod2_wire.png`, `gate_phantom_lod2_34.png`.
+
+#### Combat-scene estimate (4-Phantom typical fight)
+
+Character tris only; courtyard kit / VFX sit in the remaining 150k Medium-view budget. KF-16 LOD2 still deferred with the rifle freeze.
+
+| Setup | Tris |
+| --- | ---: |
+| Player 1P (arms 5704 + KF-16 4628) | 10332 |
+| 4× Phantom LOD2 | 14000 |
+| **Typical mid-range fight** | **24332** |
+| 1 close Phantom LOD0 + 3× LOD2 + player 1P | 53744 |
+
+Both setups sit well under the 150k visible-tri cap.
+
+Do not request Gate A / A2 approval on this pass.
+
 - nginx: remove duplicate `mp4` MIME under `/media/` (inherit `mime.types`). No routing change. No TuGPT change. Reload, not restart.
 - Godot: drop unused Android export preset so Web export does not probe Gradle `build-tools`. Do not install the Android SDK.
 

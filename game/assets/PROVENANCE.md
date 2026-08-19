@@ -37,17 +37,19 @@ Only resulting game meshes (GLB) are intended to ship.
 
 ### Current GLBs (Godot 4.7.1 imported, Gate A2 clay)
 
-Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms and KF-16 receiving-geo pass 2026-08-18. Assault kit `8c9c30a` and Phantom kit 2026-08-18. Counts from Blender export (Godot recapture still held).
+Godot Compatibility import 2026-08-17 (operators / KF-16, 1920×1080). FPS arms and KF-16 receiving-geo pass 2026-08-18. Operator kit then hidden collapse + LOD 2026-08-18. Counts from Blender export (Godot recapture still held).
 
 | asset_id | tris | verts | source body tris | GLB | notes |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ff_op_assault | 41234 | 20911 | 26752 | 1002 KB | hm08 + MOLLE carrier / drop-leg / NVG shroud; full body kept |
-| ff_sb_phantom | 37934 | 19135 | 26752 | 908 KB | leaner macros; X-harness, compact pack, dual thigh pouches |
+| ff_op_assault | 36234 | 18411 | 26752 | 891 KB | LOD0; cummerbund + hidden collapse; kit 14658 |
+| ff_op_assault_lod2 | 3999 | 2282 | — | 126 KB | combat-distance LOD2 |
+| ff_sb_phantom | 32912 | 16624 | 26752 | 797 KB | LOD0; hidden collapse; kit 11182 |
+| ff_sb_phantom_lod2 | 3500 | 1907 | — | 109 KB | combat-distance LOD2 |
 | ff_wpn_kf16 | 4628 | 2344 | — | 121 KB | winter trigger well + support-corner relief; nodes unchanged |
 | ff_fps_arms | 5704 | 2856 | — | 135 KB | hm08 short extract re-seated after receiving-geo edit |
 
 No textures, no production materials, no rig. Weapon balance JSON untouched. Collision/nav hulls untouched.
 
-**Hidden-geo strategy:** wrap cage is torso/head/legs only so T-pose arms cannot spike plates. Full hm08 body is kept for Gate A2 form review (no hidden-torso collapse yet). After approval, collapse covered torso under armor. Face, neck, hands, feet, shoulders, elbows, and knees stay dense for later deform. FPS arms are a separate 1P viewmodel, not the 3P body.
+**Hidden-geo strategy:** kit shrinkwraps onto an armless wrap cage. Covered body verts (under armor/harness/helmet, minus face/neck/hands/feet/shoulders/elbows/knees) are collapse-decimated for LOD0. LOD2 is a full-mesh collapse of the joined character to the combat-distance cap. FPS arms remain a separate 1P viewmodel.
 
 Blend sources: `art/v02/src/` (local DCC, not in git). Blender clay: `art/v02/renders/` (gitignored). Review shots: `game/assets/v02/shots/` (excluded from Web export). Grip-checkpoint frames in that folder are the current Blender FOV-75 workbench captures; Godot in-engine recapture is held until the grip passes.

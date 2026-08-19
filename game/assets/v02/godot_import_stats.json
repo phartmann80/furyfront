@@ -1,5 +1,6 @@
 {
-	"assault_tris": 41234,
+	"assault_tris": 36234,
+	"assault_lod2_tris": 3999,
 	"fps_arms_tris": 5704,
 	"kf16_nodes": [
 		"ff_wpn_kf162",
@@ -14,7 +15,8 @@
 	"materials_assault": 4,
 	"materials_kf16": 2,
 	"materials_phantom": 4,
-	"phantom_tris": 37934,
+	"phantom_tris": 32912,
+	"phantom_lod2_tris": 3500,
 	"surfaces_assault": 4,
 	"surfaces_kf16": 2,
 	"surfaces_phantom": 4,

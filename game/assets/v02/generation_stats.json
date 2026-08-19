@@ -5,46 +5,56 @@
   "assets": [
     {
       "asset": "ff_op_assault",
-      "tris": 41234,
-      "verts": 20911,
+      "tris": 36234,
+      "verts": 18411,
+      "lod2_tris": 3999,
+      "lod2_verts": 2282,
       "source_body_tris": 26752,
       "source_body_verts": 13378,
       "height_m": 1.8127289410331286,
       "hidden": {
-        "hidden_verts_decimated": 0,
-        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
-        "kit_pieces": 38,
-        "kit_tris": 14482,
-        "body_tris": 26752
+        "hidden_verts_decimated": 2628,
+        "protect_kept": "face, neck, hands, feet, shoulders, elbows, knees",
+        "kit_method": "MOLLE carrier, cummerbund, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails",
+        "kit_pieces": 39,
+        "kit_tris": 14658,
+        "body_tris": 21576,
+        "body_tris_before": 26752,
+        "collapse_ratio": 0.1
       },
       "materials": 4,
       "textures": "none — Gate A clay",
       "rig": "deferred",
-      "glb_bytes": 1025680,
-      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, wearable kit, no textures, no rig",
+      "glb_bytes": 912540,
+      "lod2_glb_bytes": 129408,
+      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, cummerbund + hidden collapse, LOD0+LOD2",
       "date": "2026-08-18"
     },
     {
       "asset": "ff_sb_phantom",
-      "tris": 37934,
-      "verts": 19135,
+      "tris": 32912,
+      "verts": 16624,
+      "lod2_tris": 3500,
+      "lod2_verts": 1907,
       "source_body_tris": 26752,
       "source_body_verts": 13378,
       "height_m": 1.740824260050431,
       "hidden": {
-        "hidden_verts_decimated": 0,
-        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
+        "hidden_verts_decimated": 2548,
+        "protect_kept": "face, neck, hands, feet, shoulders, elbows, knees",
         "kit_method": "X-harness + sternum, compact pack with lid/node, dual thigh pouches, stealth visor, waist taps",
         "kit_pieces": 31,
         "kit_tris": 11182,
-        "body_tris": 26752
+        "body_tris": 21730,
+        "body_tris_before": 26752,
+        "collapse_ratio": 0.1
       },
       "materials": 4,
       "textures": "none — Gate A clay",
       "rig": "deferred",
-      "glb_bytes": 929696,
-      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, leaner macros, wearable harness/pack",
+      "glb_bytes": 816460,
+      "lod2_glb_bytes": 111288,
+      "generation": "Gate A2 clay: MPFB2 v2.0.17 hm08, harness kit + hidden collapse, LOD0+LOD2",
       "date": "2026-08-18"
     },
     {
@@ -77,6 +87,6 @@
       "date": "2026-08-18"
     }
   ],
-  "hidden_geo_strategy": "hm08 is the source mesh. Helpers are baked and stripped before kit. Kit is closed grids/volumes shrinkwrapped onto an armless wrap cage so T-pose arms cannot spike plates. Gate A2 keeps the full body for form review (no hidden-torso collapse yet). After approval, collapse covered torso under armor; keep face, neck, hands, feet, shoulders, elbows, knees. FPS arms are a separate viewmodel (weapon-local), not the 3P body.",
+  "hidden_geo_strategy": "Kit shrinkwraps onto an armless wrap cage. Covered body verts under armor/harness/helmet are collapse-decimated for LOD0; face, neck, hands, feet, shoulders, elbows, knees stay dense. LOD2 is a full-mesh collapse of the joined character to the combat-distance cap. FPS arms are a separate viewmodel (weapon-local), not the 3P body.",
   "runtime_note": "Triangle budget is the complete visible character, not source hm08 plus stacked kit."
 }

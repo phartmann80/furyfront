@@ -866,10 +866,10 @@ def waist_torus(body, name, material, *, major_extra=0.018, minor=0.016):
     return ob
 
 
-def fitted_belt(target, body, name, material, *, depth=0.05, extra=0.006, thickness=0.010):
+def fitted_belt(target, body, name, material, *, depth=0.05, extra=0.006, thickness=0.010, z_offset=0.0):
     """Waist band from an open cylinder tube shrinkwrapped to the armless cage — not a floating torus."""
     r = region_sets(body)
-    c = centroid_of(body, r["belt"])
+    c = centroid_of(body, r["belt"]) + Vector((0.0, 0.0, z_offset))
     pts = [body.data.vertices[i].co for i in r["belt"]]
     if not pts:
         return None
@@ -1103,6 +1103,78 @@ def reduce_hidden_body(body, hide: set[int], protect: set[int], ratio=0.14) -> i
     return len(idx)
 
 
+def verts_under_kit(body, kit_parts, margin=0.024) -> set[int]:
+    """Body verts with kit sitting just outside the skin — the covered set for collapse."""
+    trees = []
+    for p in kit_parts:
+        if p is None or p == body or p.type != "MESH":
+            continue
+        if "Glove" in p.name:
+            continue
+        if len(p.data.vertices) < 8:
+            continue
+        trees.append(bvh_of(p))
+    if not trees:
+        return set()
+    bm = bmesh_of(body)
+    bm.normal_update()
+    hide = set()
+    for v in bm.verts:
+        p = Vector(v.co)
+        n = Vector(v.normal)
+        for tree in trees:
+            loc, _nrm, _idx, dist = tree.find_nearest(p)
+            if loc is None or dist > margin:
+                continue
+            if (Vector(loc) - p).dot(n) > -0.002:
+                hide.add(v.index)
+                break
+    bm.free()
+    return hide
+
+
+def collapse_under_kit(body, kit_parts, *, ratio=0.10) -> dict:
+    r = region_sets(body)
+    m = metrics(body)
+    h, z0 = m["h"], m["zmin"]
+
+    def tz(p, a, b):
+        t = (p.z - z0) / h if h else 0.0
+        return a <= t <= b
+
+    protect = (
+        r["face"] | r["neck"] | r["hands"] | r["feet"]
+        | r["elbows"] | r["knees"] | r["l_pad"] | r["r_pad"]
+    )
+    # Carrier / harness / helmet occupancy — not visible limbs.
+    band = select_by(body, lambda p: tz(p, 0.48, 0.90) and abs(p.x) < 0.19)
+    hide = verts_under_kit(body, kit_parts, margin=0.032)
+    hide |= r["torso_hide"] | band | (r["helm"] - r["face"])
+    hide = grow_indices(body, hide, 2)
+    before = tris(body)
+    n = reduce_hidden_body(body, hide, protect, ratio=ratio)
+    after = tris(body)
+    print(f"COLLAPSE hide_marked={n} body_tris {before}->{after} ratio={ratio}", flush=True)
+    return {
+        "hidden_verts_decimated": n,
+        "protect_kept": "face, neck, hands, feet, shoulders, elbows, knees",
+        "body_tris_before": before,
+        "body_tris_after": after,
+        "collapse_ratio": ratio,
+    }
+
+
+def make_lod2(src, name, cap: int):
+    lod = duplicate_mesh(src, name)
+    triangulate(lod)
+    cap_mesh(lod, cap)
+    cleanup_mesh(lod)
+    shade_auto(lod)
+    t, v = count_tree(lod)
+    print(f"LOD2 {name} tris={t} verts={v} cap={cap} {'OK' if t <= cap else 'OVER'}", flush=True)
+    return lod, t, v
+
+
 def closed_helmet(body, armor_mat, visor_mat, stealth=False) -> list:
     m = metrics(body)
     loc = Vector((0.0, torso_center_y(body, m), m["zmin"] + m["h"] * 0.938))
@@ -1216,6 +1288,7 @@ def kit_assault(body, mats) -> tuple[list, dict]:
         0.030, 0.16, (0.2, -0.65, 0.55), offset=0.015, thickness=0.006, cuts=3, material=armor,
     )
     belt = fitted_belt(cage, body, "Belt", armor, depth=0.050, extra=0.005, thickness=0.012)
+    cumb = fitted_belt(cage, body, "Cummerbund", armor, depth=0.058, extra=0.008, thickness=0.011, z_offset=0.046)
     lk = knee_mount(cage, body, "LKnee", r["l_knee"], armor)
     rk = knee_mount(cage, body, "RKnee", r["r_knee"], armor)
 
@@ -1339,16 +1412,16 @@ def kit_assault(body, mats) -> tuple[list, dict]:
 
     parts = [
         body, front, plate_insert, back, l_side, r_side, l_pad, r_pad, collar,
-        l_strap, r_strap, l_buckle, r_buckle, belt, lk, rk, webbing, molle_f, molle_b,
+        l_strap, r_strap, l_buckle, r_buckle, belt, cumb, lk, rk, webbing, molle_f, molle_b,
         admin, dump, lumbar, util, radio, ant, drop, cargo, l_elb, r_elb,
         l_boot, r_boot, helm_kit, visor_obj, gaiter, l_glove, r_glove,
     ] + pouches
     parts = [p for p in parts if p is not None]
+    collapse = collapse_under_kit(body, [p for p in parts if p != body], ratio=0.10)
     meta = kit_meta(parts, body)
     return parts, {
-        "hidden_verts_decimated": 0,
-        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
-        "kit_method": "MOLLE carrier, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails, gaiter cuff boots, dual knee straps",
+        **collapse,
+        "kit_method": "MOLLE carrier, cummerbund, mag/admin/dump/lumbar pouches, drop-leg, NVG shroud + ARC rails",
         "kit_pieces": meta["kit_pieces"],
         "kit_tris": meta["kit_tris"],
         "body_tris": meta["body_tris"],
@@ -1465,10 +1538,10 @@ def kit_phantom(body, mats) -> tuple[list, dict]:
         l_glove, r_glove,
     ] + pack_straps
     parts = [p for p in parts if p is not None]
+    collapse = collapse_under_kit(body, [p for p in parts if p != body], ratio=0.10)
     meta = kit_meta(parts, body)
     return parts, {
-        "hidden_verts_decimated": 0,
-        "protect_kept": "full hm08 kept for Gate A2 form — hidden-torso collapse planned after approval",
+        **collapse,
         "kit_method": "X-harness + sternum, compact pack with lid/node, dual thigh pouches, stealth visor, waist taps",
         "kit_pieces": meta["kit_pieces"],
         "kit_tris": meta["kit_tris"],
@@ -2438,7 +2511,11 @@ def build_assault(svc, out_glb, render_dir, src_dir) -> dict:
     parts, hid = kit_assault(body, mats)
     joined = join_objects("ff_op_assault", parts)
     t, v = count_tree(joined)
+    print_mesh_bounds(joined, "assault_lod0")
+    print("KIT", hid, flush=True)
+    lod2, t2, v2 = make_lod2(joined, "ff_op_assault_lod2", 4000)
     export_glb(out_glb, [joined])
+    export_glb(os.path.splitext(out_glb)[0] + "_lod2.glb", [lod2])
     render_previews(render_dir, "assault_front.png", (0.0, -3.2, 0.95), (0.0, 0.0, 0.90), [joined], lens=55)
     render_previews(render_dir, "assault_34.png", (2.1, -2.6, 1.05), (0.0, 0.0, 0.90), [joined], lens=50)
     render_previews(render_dir, "assault_back.png", (0.0, 3.2, 0.95), (0.0, 0.0, 0.90), [joined], lens=55)
@@ -2446,11 +2523,17 @@ def build_assault(svc, out_glb, render_dir, src_dir) -> dict:
     render_previews(render_dir, "assault_kit.png", (0.35, -0.80, 1.22), (0.0, 0.04, 1.18), [joined], lens=65)
     render_previews(render_dir, "assault_wire.png", (2.1, -2.6, 1.05), (0.0, 0.0, 0.90), [joined], wire=True, lens=50)
     render_one_silhouette(render_dir, "assault_sil.png", joined)
+    render_previews(render_dir, "assault_lod2.png", (3.4, -10.5, 1.85), (0.0, 0.0, 0.90), [lod2], lens=45)
+    render_previews(render_dir, "assault_lod2_wire.png", (3.4, -10.5, 1.85), (0.0, 0.0, 0.90), [lod2], wire=True, lens=45)
+    render_previews(render_dir, "assault_lod2_34.png", (7.6, -8.2, 1.70), (0.0, 0.0, 0.90), [lod2], lens=45)
+    bpy.data.objects.remove(lod2, do_unlink=True)
     save_blend(os.path.join(src_dir, "assault.blend"))
     return {
         "asset": "ff_op_assault",
         "tris": t,
         "verts": v,
+        "lod2_tris": t2,
+        "lod2_verts": v2,
         "source_body_tris": src["source_tris"],
         "source_body_verts": src["source_verts"],
         "height_m": src["height"],
@@ -2488,9 +2571,11 @@ def build_phantom(svc, out_glb, render_dir, src_dir) -> dict:
     parts, hid = kit_phantom(body, mats)
     joined = join_objects("ff_sb_phantom", parts)
     t, v = count_tree(joined)
-    print_mesh_bounds(joined, "phantom")
+    print_mesh_bounds(joined, "phantom_lod0")
     print("KIT", hid, flush=True)
+    lod2, t2, v2 = make_lod2(joined, "ff_sb_phantom_lod2", 3500)
     export_glb(out_glb, [joined])
+    export_glb(os.path.splitext(out_glb)[0] + "_lod2.glb", [lod2])
     render_previews(render_dir, "phantom_front.png", (0.0, -3.0, 0.90), (0.0, 0.0, 0.85), [joined], lens=55)
     render_previews(render_dir, "phantom_34.png", (2.0, -2.4, 1.00), (0.0, 0.0, 0.85), [joined], lens=50)
     render_previews(render_dir, "phantom_back.png", (0.0, 3.0, 0.90), (0.0, 0.0, 0.85), [joined], lens=55)
@@ -2498,11 +2583,17 @@ def build_phantom(svc, out_glb, render_dir, src_dir) -> dict:
     render_previews(render_dir, "phantom_kit.png", (0.32, -0.75, 1.12), (0.0, 0.04, 1.08), [joined], lens=65)
     render_previews(render_dir, "phantom_wire.png", (2.0, -2.4, 1.00), (0.0, 0.0, 0.85), [joined], wire=True, lens=50)
     render_one_silhouette(render_dir, "phantom_sil.png", joined)
+    render_previews(render_dir, "phantom_lod2.png", (3.2, -10.0, 1.75), (0.0, 0.0, 0.85), [lod2], lens=45)
+    render_previews(render_dir, "phantom_lod2_wire.png", (3.2, -10.0, 1.75), (0.0, 0.0, 0.85), [lod2], wire=True, lens=45)
+    render_previews(render_dir, "phantom_lod2_34.png", (7.2, -7.8, 1.60), (0.0, 0.0, 0.85), [lod2], lens=45)
+    bpy.data.objects.remove(lod2, do_unlink=True)
     save_blend(os.path.join(src_dir, "phantom.blend"))
     return {
         "asset": "ff_sb_phantom",
         "tris": t,
         "verts": v,
+        "lod2_tris": t2,
+        "lod2_verts": v2,
         "source_body_tris": src["source_tris"],
         "source_body_verts": src["source_verts"],
         "height_m": src["height"],
@@ -2768,14 +2859,14 @@ def main() -> None:
         record(
             build_assault(svc, os.path.join(glb_dir, "ff_op_assault.glb"), renders, src),
             "ff_op_assault.glb",
-            "Gate A2 clay: MPFB2 v2.0.17 hm08, wearable kit, no textures, no rig",
+            "Gate A2 clay: MPFB2 v2.0.17 hm08, cummerbund + hidden collapse, LOD0+LOD2",
         )
     if only in {"all", "phantom"}:
         print("BUILD ff_sb_phantom", flush=True)
         record(
             build_phantom(svc, os.path.join(glb_dir, "ff_sb_phantom.glb"), renders, src),
             "ff_sb_phantom.glb",
-            "Gate A2 clay: MPFB2 v2.0.17 hm08, leaner macros, wearable harness/pack",
+            "Gate A2 clay: MPFB2 v2.0.17 hm08, harness kit + hidden collapse, LOD0+LOD2",
         )
     if only in {"all", "kf16", "arms"}:
         print("BUILD ff_wpn_kf16", flush=True)

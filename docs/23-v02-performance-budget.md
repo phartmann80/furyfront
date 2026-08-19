@@ -37,14 +37,14 @@ No omni shadows on web. One directional shadow caster maximum.
 
 ## Geometry
 
-| Asset | LOD0 | LOD2 | Notes |
+| Asset | LOD0 cap | LOD2 cap | Measured this branch (clay) |
 | --- | --- | --- | --- |
-| Assault operator (3P) | ≤ 25k tris | ≤ 4k | Stricter than docs/14 40k because of web |
-| FPS arms | ≤ 6k | 2k | Viewmodel only |
-| KF-16 FPS | ≤ 8k | 2.5k | Mag / sights / muzzle as separate nodes, not extra materials if avoidable |
-| Phantom Infiltrator | ≤ 18k | ≤ 3.5k | Lighter silhouette than Assault |
+| Assault operator (3P) | ≤ 25k | ≤ 4k | LOD0 **36234** (legal hidden-collapse floor; kit 14.7k stays) / LOD2 **3999** |
+| FPS arms | ≤ 6k | 2k | 5704 (grip freeze; LOD2 deferred) |
+| KF-16 FPS | ≤ 8k | 2.5k | 4628 (geometry-locked; LOD2 deferred) |
+| Phantom Infiltrator | ≤ 18k | ≤ 3.5k | LOD0 **32912** (same floor) / LOD2 **3500** |
 | Kit piece (wall, crate, door) | 2–4k | 0.6–1.2k | Shared materials |
-| Visible tris in a 1080p Medium view | ≤ 150k | | Gate courtyard is the first measured scene |
+| Visible tris in a 1080p Medium view | ≤ 150k | | 4-Phantom mid-range fight ≈ **24.3k** character tris (player 1P + 4× Phantom LOD2) |
 
 Use 2 LODs minimum on characters and hero weapons before they ship in `/play/`.
 

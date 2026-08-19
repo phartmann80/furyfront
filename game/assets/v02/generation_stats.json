@@ -77,14 +77,14 @@
       "textures": "none — Gate A2 clay",
       "rig": "deferred — dedicated FPS viewmodel, weapon-local, parented to KF-16",
       "space": "weapon-local",
-      "hands": "hm08 short extract — palm snap, wrap curl, authored index/thumb",
+      "hands": "hm08 short extract — palm snap, wrap curl, authored index/thumb (known polish; human posing cancelled)",
       "budget_ok": true,
       "gameplay_hip": [0.22, -0.19, -0.40],
       "gameplay_ads": [0.0, -0.135, -0.36],
       "gameplay_fov": 75.0,
       "glb_bytes": 138200,
-      "generation": "Gate A2 clay: hm08 short-extract FPS hands, palm snap + wrap curl + authored index/thumb",
-      "date": "2026-08-18"
+      "generation": "Gate A2 clay: hm08 FPS hands, snap/curl at ship clearance (known polish)",
+      "date": "2026-08-19"
     }
   ],
   "hidden_geo_strategy": "Kit shrinkwraps onto an armless wrap cage. Covered body verts under armor/harness/helmet are collapse-decimated for LOD0; face, neck, hands, feet, shoulders, elbows, knees stay dense. LOD2 is a full-mesh collapse of the joined character to the combat-distance cap. FPS arms are a separate viewmodel (weapon-local), not the 3P body.",

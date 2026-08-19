@@ -29,3 +29,10 @@ V0.1 gameplay is **accepted** (production `000fc95`). Active work is **Visual Be
 Human playtest of https://furyfront.app/play/ stays open. Genuine blockers outrank art.
 
 Do not expand into BR, DMZ, ranked, store, battle pass, 27 weapons, 12 operators, or eight maps. Ironfall Depot and Broken Perimeter look and feel first.
+
+## Known polish (does not block the web build)
+
+- **FPS grip.** Automated snap/curl at ship clearance. Index-in-the-well and support-corner contact will still miss on close-ups. Do not reopen the human Blender posing handoff.
+- **LOD0 kit density.** Assault 36.2k / Phantom 32.9k vs ~22–25k / ~16–18k. Weight is kit tris; fold a cut into form polish if time allows.
+- **Clay materials / Ironfall graybox hulls.** Play path uses V0.2 character/weapon GLBs on the V0.1 depot. Textures and a denser gate overlay are quality work, not a gameplay gate.
+

@@ -12,6 +12,7 @@ import importlib
 import json
 import math
 import os
+import shutil
 import sys
 from datetime import datetime, timezone
 
@@ -2304,15 +2305,15 @@ def pose_index_two_segment(ob, idxs, palm, along, across, out, bvh, sign):
     waypoint = Vector((0.012, 0.032, -0.034))
     trigger = Vector((0.006, 0.028, -0.026))
     tip_i = _tip_index(ob, idxs, palm, along)
-    pose_digit_to_target(ob, idxs, kn, waypoint, "INDEX-swing", t=0.90)
+    pose_digit_to_target(ob, idxs, kn, waypoint, "INDEX-swing", t=0.55)
     scored = sorted(idxs, key=lambda i: (ob.data.vertices[i].co - ob.data.vertices[tip_i].co).length)
     dist = scored[: max(4, len(scored) // 2)]
     prox = [i for i in idxs if i not in set(dist)] or idxs
     mid_i = min(prox, key=lambda i: (ob.data.vertices[i].co - ob.data.vertices[tip_i].co).length)
     mid = ob.data.vertices[mid_i].co.copy()
-    pose_digit_to_target(ob, dist, mid, trigger, "INDEX-in", t=0.70)
+    pose_digit_to_target(ob, dist, mid, trigger, "INDEX-in", t=0.40)
     for i in idxs:
-        ob.data.vertices[i].co.x += 0.002
+        ob.data.vertices[i].co.x += 0.006
     ob.data.update()
     tip = ob.data.vertices[tip_i].co
     opening = abs(tip.x) < 0.022 and -0.012 < tip.y < 0.032 and -0.052 < tip.z < -0.010
@@ -2354,20 +2355,23 @@ def pose_contact_hand(
         idx = groups.get("index", [])
         idx = [i for i in idx if (ob.data.vertices[i].co - palm).dot(along) > 0.024]
         pose_index_two_segment(ob, idx, palm, along, across, out, bvh, sign)
+        push_hand_clearance(ob, idx, bvh, sign, Vector((1.0, 0.0, 0.0)), min_clear=0.0035, max_push=0.010, label=f"{ob.name}-index")
     else:
         for name in wrap:
             for i in groups.get(name, []):
-                ob.data.vertices[i].co += Vector(plane_n) * 0.006
+                ob.data.vertices[i].co += Vector(plane_n) * 0.010 + Vector((0.0, 0.0, 0.004))
         ob.data.update()
         pose_support_cuff(ob, palm, along, across)
+        wrap_idxs = [i for name in wrap for i in groups.get(name, [])]
+        push_hand_clearance(ob, wrap_idxs, bvh, sign, plane_n, min_clear=0.0040, max_push=0.012, label=f"{ob.name}-fingers")
     thumb = groups.get("thumb", [])
     if trigger and thumb:
         # Distal thumb only, rest along the grip's right/front — do not drag the web through the receiver.
         t_pivot = palm + Vector(across) * 0.008 - Vector(along) * 0.006 + Vector(out) * 0.004
         distal = distal_indices(ob, thumb, palm, across, frac=0.50)
-        pose_digit_to_target(ob, distal, t_pivot, Vector((0.018, 0.006, -0.040)), f"{ob.name}-thumb", t=0.70)
+        pose_digit_to_target(ob, distal, t_pivot, Vector((0.018, 0.006, -0.040)), f"{ob.name}-thumb", t=0.55)
         web = web_indices(ob, palm, along, across, out)
-        push_hand_clearance(ob, web or thumb, bvh, sign, plane_n, min_clear=0.0024, max_push=0.007, label=f"{ob.name}-web")
+        push_hand_clearance(ob, web or thumb, bvh, sign, plane_n, min_clear=0.0040, max_push=0.010, label=f"{ob.name}-web")
     assign_mat(ob, glove_mat)
     shade_auto(ob)
     return ob
@@ -2386,7 +2390,8 @@ def posed_trigger_hand(glove_mat, body, bvh, sign) -> list:
     hand = extract_viewmodel_arm(body, 1.0)
     pose_contact_hand(
         hand, 1.0, palm_c, across, along, out, bvh, sign, glove_mat, plane_pt, plane_n,
-        trigger=True, palm_clearance=0.0038,
+        trigger=True, palm_clearance=0.0055,
+        wrap_max_ang=0.40, wrap_clearance=0.0040,
     )
     hand.name = "RHand"
     return [hand]
@@ -2406,8 +2411,8 @@ def posed_support_hand(glove_mat, body, bvh, sign) -> list:
     pose_contact_hand(
         hand, -1.0, palm_c, across, along, out, bvh, sign, glove_mat, plane_pt, plane_n,
         trigger=False,
-        wrap_max_ang=0.28, wrap_min_ang=0.08, wrap_clearance=0.0050,
-        wrap_prefer=(1.0, 0.0, 0.25), palm_clearance=0.0085,
+        wrap_max_ang=0.16, wrap_min_ang=0.04, wrap_clearance=0.0070,
+        wrap_prefer=(1.0, 0.0, 0.25), palm_clearance=0.0120,
     )
     hand.name = "LHand"
     return [hand]
@@ -2433,7 +2438,7 @@ def build_fps_arms(glove_mat, sleeve_mat, gun_root, body) -> tuple[bpy.types.Obj
         "tris": t,
         "verts": v,
         "space": "weapon-local",
-        "hands": "hm08 short extract — palm snap, wrap curl, authored index/thumb",
+        "hands": "hm08 short extract — palm snap, light wrap, clearance-biased index/thumb (known polish)",
         "budget_ok": t <= 6000,
     }
 
@@ -2477,6 +2482,31 @@ def render_fps(out_dir, name, subjects, wire=False) -> None:
     restore_hide(st)
     bpy.data.objects.remove(cob, do_unlink=True)
     bpy.data.cameras.remove(cam)
+
+
+def copy_fps_shots(render_dir, shot_dir) -> None:
+    """Commit-visible FOV-75 set. Renders stay gitignored under art/v02/renders/."""
+    mapping = {
+        "arms_hip.png": ("gate_fps_hip.png", "gate_fps_kf16.png"),
+        "arms_ads.png": ("gate_fps_ads.png",),
+        "arms_intersect.png": ("gate_fps_intersect.png",),
+        "arms_wire.png": ("gate_fps_wire.png",),
+        "arms_trigger.png": ("gate_fps_trigger.png",),
+        "arms_support.png": ("gate_fps_support.png",),
+        "arms_hands_wire.png": ("gate_fps_hands_wire.png",),
+    }
+    os.makedirs(shot_dir, exist_ok=True)
+    for src_name, dests in mapping.items():
+        src = os.path.join(render_dir, src_name)
+        if not os.path.isfile(src):
+            print(f"SHOT missing {src}", flush=True)
+            continue
+        for dest in dests:
+            dst = os.path.join(shot_dir, dest)
+            if os.path.isfile(dst):
+                os.remove(dst)
+            shutil.copyfile(src, dst)
+            print(f"SHOT {dest}", flush=True)
 
 
 def save_blend(path) -> None:
@@ -2674,6 +2704,7 @@ def build_arms(svc, out_glb, render_dir, src_dir) -> dict:
     render_previews(render_dir, "arms_trigger.png", (0.16, 0.05, 0.04), (0.02, 0.002, -0.040), [arms, gun], lens=42)
     render_previews(render_dir, "arms_support.png", (-0.16, 0.12, 0.11), (0.00, 0.218, 0.032), [arms, gun], lens=42)
     render_previews(render_dir, "arms_hands_wire.png", (0.24, -0.14, 0.18), (0.00, 0.08, -0.01), [arms, gun], wire=True, lens=38)
+    copy_fps_shots(render_dir, os.path.join(os.path.dirname(out_glb), "shots"))
     save_blend(os.path.join(src_dir, "fps_arms.blend"))
     return {
         "asset": "ff_fps_arms",
@@ -2684,7 +2715,7 @@ def build_arms(svc, out_glb, render_dir, src_dir) -> dict:
         "rig": "deferred — dedicated FPS viewmodel, weapon-local, parented to KF-16",
         "space": "weapon-local",
         "hands": info["hands"],
-        "source": "hm08 short extract, palm snap, contact curl",
+        "source": "hm08 short extract, palm snap, clearance-biased contact curl (known polish)",
         "budget_ok": info.get("budget_ok"),
         "gameplay_hip": list(GODOT_HIP),
         "gameplay_ads": list(GODOT_ADS),
@@ -2868,7 +2899,7 @@ def main() -> None:
             "ff_sb_phantom.glb",
             "Gate A2 clay: MPFB2 v2.0.17 hm08, harness kit + hidden collapse, LOD0+LOD2",
         )
-    if only in {"all", "kf16", "arms"}:
+    if only in {"all", "kf16"}:
         print("BUILD ff_wpn_kf16", flush=True)
         record(
             build_kf16(os.path.join(glb_dir, "ff_wpn_kf16.glb"), renders, src),
@@ -2880,7 +2911,7 @@ def main() -> None:
         record(
             build_arms(svc, os.path.join(glb_dir, "ff_fps_arms.glb"), renders, src),
             "ff_fps_arms.glb",
-            "Gate A2 clay: hm08 short-extract FPS hands, palm snap + contact curl",
+            "Gate A2 clay: hm08 FPS hands, snap/curl at ship clearance (known polish)",
         )
     if only in {"all", "assault", "phantom"}:
         render_silhouette(os.path.join(glb_dir, "ff_op_assault.glb"), os.path.join(glb_dir, "ff_sb_phantom.glb"), renders)

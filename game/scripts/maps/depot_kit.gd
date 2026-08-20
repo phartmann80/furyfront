@@ -1,6 +1,7 @@
 class_name DepotKit
 extends RefCounted
-## Visual-only Ironfall pieces. Collision and nav stay on IronfallBuilder hulls.
+## Visual Ironfall dressing. Player-height props collide; floor paint and cables do not.
+## Hulls and nav still come from IronfallBuilder.
 
 const _GatePresentation := preload("res://scripts/maps/gate_presentation.gd")
 
@@ -44,16 +45,34 @@ func _mat(key: String, color: Color, metallic: float = 0.0, roughness: float = 0
 	return m
 
 
-func _mesh(parent: Node3D, named: String, size: Vector3, pos: Vector3, mat: Material, rot_y: float = 0.0) -> MeshInstance3D:
+func _mesh(parent: Node3D, named: String, size: Vector3, pos: Vector3, mat: Material, rot_y: float = 0.0, collide: bool = false) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	mi.name = named
+	mi.name = named if not collide else "Mesh"
 	var box := BoxMesh.new()
 	box.size = size
 	mi.mesh = box
 	mi.material_override = mat
+	# Overlay boxes are walk-through unless collide is set. Shadows on every crate
+	# melted web fill-rate; keep them unlit casters.
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if collide:
+		var body := StaticBody3D.new()
+		body.name = named
+		body.collision_layer = PhysLayers.WORLD
+		body.collision_mask = 0
+		var col := CollisionShape3D.new()
+		var sh := BoxShape3D.new()
+		sh.size = size
+		col.shape = sh
+		body.add_child(col)
+		mi.position = Vector3.ZERO
+		body.add_child(mi)
+		body.position = pos
+		body.rotation_degrees.y = rot_y
+		parent.add_child(body)
+		return mi
 	mi.position = pos
 	mi.rotation_degrees.y = rot_y
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if GraphicsProfile.tier == GraphicsProfile.Tier.LOW else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	parent.add_child(mi)
 	return mi
 
@@ -77,11 +96,11 @@ func _security_doorway(kit: Node3D) -> void:
 	var steel := _mat("steel", Color(0.18, 0.19, 0.2), 0.7, 0.38)
 	var frame := _mat("frame", Color(0.12, 0.13, 0.14), 0.65, 0.4)
 	# Opening between GateLeft/GateRight stays walkable; frames sit on the jambs.
-	_mesh(kit, "DoorJambL", Vector3(0.28, 3.2, 0.42), Vector3(-3.15, 1.6, 34.05), frame)
-	_mesh(kit, "DoorJambR", Vector3(0.28, 3.2, 0.42), Vector3(3.15, 1.6, 34.05), frame)
+	_mesh(kit, "DoorJambL", Vector3(0.28, 3.2, 0.42), Vector3(-3.15, 1.6, 34.05), frame, 0.0, true)
+	_mesh(kit, "DoorJambR", Vector3(0.28, 3.2, 0.42), Vector3(3.15, 1.6, 34.05), frame, 0.0, true)
 	_mesh(kit, "DoorLintel", Vector3(6.6, 0.32, 0.5), Vector3(0, 3.22, 34.05), steel)
-	_mesh(kit, "DoorLeafL", Vector3(1.35, 2.6, 0.08), Vector3(-3.85, 1.4, 33.55), steel, 18.0)
-	_mesh(kit, "DoorLeafR", Vector3(1.35, 2.6, 0.08), Vector3(3.85, 1.4, 33.55), steel, -18.0)
+	_mesh(kit, "DoorLeafL", Vector3(1.35, 2.6, 0.08), Vector3(-3.85, 1.4, 33.55), steel, 18.0, true)
+	_mesh(kit, "DoorLeafR", Vector3(1.35, 2.6, 0.08), Vector3(3.85, 1.4, 33.55), steel, -18.0, true)
 
 
 func _sandbags(kit: Node3D) -> void:
@@ -92,17 +111,17 @@ func _sandbags(kit: Node3D) -> void:
 	]
 	var i := 0
 	for s in spots:
-		_mesh(kit, "Sandbag%d" % i, Vector3(0.7, 0.28, 0.38), s, bag)
+		_mesh(kit, "Sandbag%d" % i, Vector3(0.7, 0.28, 0.38), s, bag, 0.0, true)
 		i += 1
 
 
 func _crates(kit: Node3D) -> void:
 	var wood := _mat("crate", Color(0.38, 0.28, 0.16), 0.0, 0.88)
 	var stencil := _mat("crate_mark", Color(0.22, 0.32, 0.22), 0.05, 0.7)
-	_mesh(kit, "CrateA", Vector3(0.9, 0.7, 0.9), Vector3(-7.2, 0.38, 31.4), wood)
-	_mesh(kit, "CrateB", Vector3(0.7, 0.55, 0.7), Vector3(-7.15, 0.98, 31.35), wood)
+	_mesh(kit, "CrateA", Vector3(0.9, 0.7, 0.9), Vector3(-7.2, 0.38, 31.4), wood, 0.0, true)
+	_mesh(kit, "CrateB", Vector3(0.7, 0.55, 0.7), Vector3(-7.15, 0.98, 31.35), wood, 0.0, true)
 	_mesh(kit, "CrateMark", Vector3(0.92, 0.08, 0.08), Vector3(-7.2, 0.62, 31.86), stencil)
-	_mesh(kit, "CrateC", Vector3(0.85, 0.65, 0.85), Vector3(7.4, 0.35, 31.1), wood)
+	_mesh(kit, "CrateC", Vector3(0.85, 0.65, 0.85), Vector3(7.4, 0.35, 31.1), wood, 0.0, true)
 
 
 func _wall_cladding(kit: Node3D) -> void:
@@ -117,11 +136,12 @@ func _wall_cladding(kit: Node3D) -> void:
 func _barriers(kit: Node3D) -> void:
 	var concrete := _mat("jersey", Color(0.4, 0.39, 0.36), 0.03, 0.9)
 	var cap := _mat("jersey_cap", Color(0.3, 0.3, 0.28), 0.08, 0.7)
-	_mesh(kit, "BarrierL", Vector3(2.4, 0.85, 0.42), Vector3(-6.2, 0.42, 27.8), concrete, 12.0)
+	_mesh(kit, "BarrierL", Vector3(2.4, 0.85, 0.42), Vector3(-6.2, 0.42, 27.8), concrete, 12.0, true)
 	_mesh(kit, "BarrierLCap", Vector3(2.5, 0.1, 0.48), Vector3(-6.2, 0.88, 27.8), cap, 12.0)
-	_mesh(kit, "BarrierR", Vector3(2.4, 0.85, 0.42), Vector3(6.2, 0.42, 27.8), concrete, -12.0)
+	_mesh(kit, "BarrierR", Vector3(2.4, 0.85, 0.42), Vector3(6.2, 0.42, 27.8), concrete, -12.0, true)
 	_mesh(kit, "BarrierRCap", Vector3(2.5, 0.1, 0.48), Vector3(6.2, 0.88, 27.8), cap, -12.0)
-	_mesh(kit, "CoverBlock", Vector3(1.6, 1.05, 0.48), Vector3(-2.2, 0.52, 29.6), concrete)
+	# Keep the gate mouth (-3..3) clear — this used to sit in the lane with no collision.
+	_mesh(kit, "CoverBlock", Vector3(1.6, 1.05, 0.48), Vector3(-5.4, 0.52, 29.6), concrete, 0.0, true)
 
 
 func _signage(kit: Node3D) -> void:
@@ -164,29 +184,30 @@ func _lights(kit: Node3D) -> void:
 
 
 func _courtyard_fill(kit: Node3D) -> void:
-	# Visual only. Keep the gate mouth (-3..3 at z≈34) and staging lane clear.
+	# Dressing in the courtyard. Player-height props collide so the camera cannot
+	# sit inside a box. Gate mouth (-3..3 at z≈34) stays open.
 	var hesco := _mat("hesco", Color(0.42, 0.38, 0.28), 0.02, 0.94)
 	var rust := _mat("drum", Color(0.28, 0.16, 0.08), 0.18, 0.62)
 	var pallet := _mat("pallet", Color(0.34, 0.24, 0.14), 0.0, 0.9)
 	var cone := _mat("cone", Color(0.62, 0.28, 0.08), 0.04, 0.7)
 	var chev := _mat("chevron", Color(0.55, 0.42, 0.10), 0.06, 0.55)
 	for i in range(4):
-		_mesh(kit, "HescoL_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(-10.4, 0.52, 29.2 + i * 1.35), hesco)
-		_mesh(kit, "HescoR_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(10.4, 0.52, 29.2 + i * 1.35), hesco)
+		_mesh(kit, "HescoL_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(-10.4, 0.52, 29.2 + i * 1.35), hesco, 0.0, true)
+		_mesh(kit, "HescoR_%d" % i, Vector3(1.15, 1.05, 1.15), Vector3(10.4, 0.52, 29.2 + i * 1.35), hesco, 0.0, true)
 	for i in range(3):
-		_mesh(kit, "DrumL_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(-8.6, 0.38, 28.4 + i * 0.55), rust)
-		_mesh(kit, "DrumR_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(8.8, 0.38, 28.2 + i * 0.55), rust)
+		_mesh(kit, "DrumL_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(-8.6, 0.38, 28.4 + i * 0.55), rust, 0.0, true)
+		_mesh(kit, "DrumR_%d" % i, Vector3(0.42, 0.72, 0.42), Vector3(8.8, 0.38, 28.2 + i * 0.55), rust, 0.0, true)
 	_mesh(kit, "PalletA", Vector3(1.2, 0.14, 0.8), Vector3(-8.9, 0.08, 31.9), pallet, 8.0)
 	_mesh(kit, "PalletB", Vector3(1.2, 0.14, 0.8), Vector3(-8.9, 0.22, 31.9), pallet, 8.0)
 	_mesh(kit, "PalletC", Vector3(1.15, 0.14, 0.75), Vector3(8.6, 0.08, 32.4), pallet, -12.0)
 	for i in range(5):
 		_mesh(kit, "Chevron_%d" % i, Vector3(0.55, 0.02, 0.16), Vector3(-2.4 + i * 1.2, 0.045, 31.1), chev)
-	_mesh(kit, "ConeL", Vector3(0.22, 0.55, 0.22), Vector3(-3.6, 0.28, 32.2), cone)
-	_mesh(kit, "ConeR", Vector3(0.22, 0.55, 0.22), Vector3(3.6, 0.28, 32.2), cone)
+	_mesh(kit, "ConeL", Vector3(0.22, 0.55, 0.22), Vector3(-3.6, 0.28, 32.2), cone, 0.0, true)
+	_mesh(kit, "ConeR", Vector3(0.22, 0.55, 0.22), Vector3(3.6, 0.28, 32.2), cone, 0.0, true)
 	var bag := _mat("sandbag", Color(0.45, 0.4, 0.28), 0.0, 0.95)
 	for i in range(4):
-		_mesh(kit, "BagRowL_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(-5.1 + (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag)
-		_mesh(kit, "BagRowR_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(5.1 - (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag)
+		_mesh(kit, "BagRowL_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(-5.1 + (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag, 0.0, true)
+		_mesh(kit, "BagRowR_%d" % i, Vector3(0.62, 0.24, 0.34), Vector3(5.1 - (i % 2) * 0.35, 0.22 + int(i / 2) * 0.24, 28.6 + i * 0.12), bag, 0.0, true)
 
 
 func _watch_and_wires(kit: Node3D) -> void:
@@ -194,11 +215,11 @@ func _watch_and_wires(kit: Node3D) -> void:
 	var cable := _mat("cable", Color(0.08, 0.08, 0.08), 0.15, 0.55)
 	var lamp := _mat("flood", Color(0.22, 0.22, 0.2), 0.45, 0.4)
 	# Watchtower at (10, 6, 30) is a hull; this is cladding only.
-	_mesh(kit, "TowerClad", Vector3(4.15, 3.4, 0.08), Vector3(10.0, 3.4, 27.95), steel)
-	_mesh(kit, "TowerCladR", Vector3(0.08, 3.4, 4.15), Vector3(12.05, 3.4, 30.0), steel)
-	_mesh(kit, "FloodPoleL", Vector3(0.12, 4.2, 0.12), Vector3(-11.6, 2.1, 33.8), steel)
+	_mesh(kit, "TowerClad", Vector3(4.15, 3.4, 0.08), Vector3(10.0, 3.4, 27.95), steel, 0.0, true)
+	_mesh(kit, "TowerCladR", Vector3(0.08, 3.4, 4.15), Vector3(12.05, 3.4, 30.0), steel, 0.0, true)
+	_mesh(kit, "FloodPoleL", Vector3(0.12, 4.2, 0.12), Vector3(-11.6, 2.1, 33.8), steel, 0.0, true)
 	_mesh(kit, "FloodHeadL", Vector3(0.55, 0.18, 0.35), Vector3(-11.6, 4.28, 33.55), lamp)
-	_mesh(kit, "FloodPoleR", Vector3(0.12, 4.2, 0.12), Vector3(11.6, 2.1, 33.8), steel)
+	_mesh(kit, "FloodPoleR", Vector3(0.12, 4.2, 0.12), Vector3(11.6, 2.1, 33.8), steel, 0.0, true)
 	_mesh(kit, "FloodHeadR", Vector3(0.55, 0.18, 0.35), Vector3(11.6, 4.28, 33.55), lamp)
 	for i in range(6):
 		_mesh(kit, "Cable_%d" % i, Vector3(9.5, 0.04, 0.04), Vector3(0.0, 3.05, 33.22 + i * 0.06), cable)

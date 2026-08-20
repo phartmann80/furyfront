@@ -30,6 +30,20 @@ func _ready() -> void:
 	md.start(world, builder.markers)
 	if md.phase != "cinematic":
 		fail.append("mission did not start cinematic")
+	md._wave(["sb_phantom", "sb_phantom"], "spawn_gate", "recruit")
+	var spawned := 0
+	for n in get_tree().get_nodes_in_group("shadowbreakers"):
+		if n is Shadowbreaker and not (n as Shadowbreaker).health.dead:
+			spawned += 1
+	if spawned < 2:
+		fail.append("play-path wave did not spawn living shadowbreakers got %d" % spawned)
+	InputService.touch_look = Vector2(10.0, 0.0)
+	var look := InputService.consume_look()
+	if absf(look.x) > 0.05:
+		fail.append("web look scale too hot got %s" % look.x)
+	if absf(look.x) < 0.008:
+		fail.append("web look scale too dead got %s" % look.x)
+	_kill_sb()
 	md._set_phase("engineer")
 	md.restored = false
 	if md._comms_hint_played:

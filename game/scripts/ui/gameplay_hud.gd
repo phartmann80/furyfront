@@ -15,6 +15,9 @@ var hit: ColorRect
 var fps: Label
 var hurt: ColorRect
 var dist: Label
+var _help: PanelContainer
+var _help_t := 0.0
+var _look_lab: Label
 
 func _ready() -> void:
 	layer = 10
@@ -76,11 +79,16 @@ func _build() -> void:
 	add_child(hit)
 	_lab(Vector2(32, 140), "SQUAD  VEX · FF-02 · FF-03 · FF-04")
 	fps = _lab(Vector2(1720, 40), "FPS --")
+	_look_lab = _lab(Vector2(1720, 68), "LOOK 100%")
+	_look_lab.add_theme_font_size_override("font_size", 13)
+	_help_panel()
 
 
 func _process(delta: float) -> void:
 	if fps:
 		fps.text = "FPS %d" % int(Engine.get_frames_per_second())
+	if _look_lab:
+		_look_lab.text = "LOOK %d%%" % int(round(InputService.look_sensitivity * 100.0))
 	if hurt and hurt.color.a > 0.0:
 		hurt.color.a = move_toward(hurt.color.a, 0.0, delta * 1.4)
 	if dist:
@@ -89,6 +97,7 @@ func _process(delta: float) -> void:
 			dist.text = "OBJECTIVE  %dm" % int(p.global_position.distance_to(GameState.objective_pos))
 		else:
 			dist.text = ""
+	_tick_help(delta)
 
 
 func _lab(pos: Vector2, text: String) -> Label:
@@ -99,6 +108,49 @@ func _lab(pos: Vector2, text: String) -> Label:
 	l.add_theme_font_size_override("font_size", 16)
 	add_child(l)
 	return l
+
+
+func _help_panel() -> void:
+	_help = PanelContainer.new()
+	_help.position = Vector2(560, 720)
+	_help.size = Vector2(800, 168)
+	_help.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.04, 0.05, 0.06, 0.78)
+	box.set_border_width_all(1)
+	box.border_color = Color(0.93, 0.62, 0.16, 0.7)
+	box.set_content_margin_all(14)
+	_help.add_theme_stylebox_override("panel", box)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	_help.add_child(col)
+	var title := Label.new()
+	title.text = "CONTROLS"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(0.93, 0.62, 0.16))
+	col.add_child(title)
+	var body := Label.new()
+	body.text = "WASD move    Mouse look    LMB fire    R reload\nFollow the OBJECTIVE marker.  E interact.  [ / ] look sensitivity.\nMove or fire to dismiss."
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_theme_font_size_override("font_size", 15)
+	body.add_theme_color_override("font_color", Color(0.9, 0.91, 0.92))
+	col.add_child(body)
+	add_child(_help)
+
+
+func _tick_help(delta: float) -> void:
+	if _help == null or not _help.visible:
+		return
+	_help_t += delta
+	if _help_t > 16.0:
+		_help.visible = false
+		return
+	if InputService.move_vector().length_squared() > 0.04:
+		_help.visible = false
+		return
+	if InputService.is_fire() or Input.is_action_pressed("interact"):
+		_help.visible = false
 
 
 func _on_hp(h: int, a: int) -> void:

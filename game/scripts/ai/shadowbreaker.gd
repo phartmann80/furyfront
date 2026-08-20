@@ -54,6 +54,17 @@ func setup(id: String, skill_name: String, points: Array[Vector3]) -> void:
 		_set_nav_target(patrol_points[0], true)
 
 
+func alert_to(pos: Vector3) -> void:
+	last_known = pos
+	has_lkp = true
+	_set_state(State.ENGAGE)
+	_set_nav_target(pos, true)
+	var dir := pos - global_position
+	dir.y = 0.0
+	if dir.length_squared() > 0.0001:
+		look_at(global_position + dir.normalized(), Vector3.UP)
+
+
 func _make_body() -> void:
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
@@ -359,7 +370,8 @@ func _can_see(player: Node3D) -> bool:
 	if to.length() > vis:
 		return false
 	var fwd := -transform.basis.z
-	if fwd.normalized().dot(to.normalized()) < cos(deg_to_rad(float(def.get("fovDeg", 70)) * 0.5)):
+	var in_cone := fwd.normalized().dot(to.normalized()) >= cos(deg_to_rad(float(def.get("fovDeg", 70)) * 0.5))
+	if not in_cone and not has_lkp:
 		return false
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(origin, target)

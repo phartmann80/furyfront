@@ -21,8 +21,8 @@ var _hitscan: HitscanSystem
 var _ads_t := 0.0
 var punch := Vector3.ZERO
 var _sway_t := 0.0
-var _hip := Vector3(0.22, -0.19, -0.40)
-var _ads := Vector3(0.0, -0.135, -0.36)
+var _hip := Vector3(0.14, -0.16, -0.50)
+var _ads := Vector3(0.0, -0.125, -0.42)
 var _sprint := Vector3(0.28, -0.28, -0.22)
 
 func setup(weapon_ids: Array) -> void:

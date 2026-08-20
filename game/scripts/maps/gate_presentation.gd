@@ -69,22 +69,9 @@ func _install_lights() -> void:
 
 
 func _install_smoke() -> void:
-	if GraphicsProfile.tier == GraphicsProfile.Tier.LOW:
-		return
-	var mi := MeshInstance3D.new()
-	mi.name = "GateHaze"
-	var sph := SphereMesh.new()
-	sph.radius = 2.2
-	sph.height = 3.4
-	mi.mesh = sph
-	var mat := StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(0.42, 0.44, 0.45, 0.07)
-	mi.material_override = mat
-	mi.position = Vector3(0, 1.4, 31.5)
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(mi)
+	# GateHaze was a walk-through sphere at head height — camera inside it read as
+	# a grey/black fill. Skip the volume; alarm lights carry the breach read.
+	pass
 
 
 func _install_overlay() -> void:

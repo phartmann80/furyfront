@@ -11,6 +11,7 @@ var _elapsed := 0.0
 var _extract_s := 0.0
 var _alarmed := false
 var _comms_hint_played := false
+var _wave_grace := 0.0
 
 func start(world: Node, markers: Dictionary) -> void:
 	map = markers
@@ -27,6 +28,8 @@ func start(world: Node, markers: Dictionary) -> void:
 func _process(delta: float) -> void:
 	_elapsed += delta
 	GameState.mission_clock += delta
+	if _wave_grace > 0.0:
+		_wave_grace = maxf(0.0, _wave_grace - delta)
 	match phase:
 		"cinematic":
 			if _elapsed > float(ContentCatalog.mission.get("cinematicS", 14)):
@@ -44,12 +47,12 @@ func _process(delta: float) -> void:
 			_wave(["sb_phantom", "sb_phantom"], "spawn_gate", "recruit")
 		"checkpoint":
 			integrity -= 0.28 * delta
-			if _enemies() <= 0 or _elapsed > 42.0:
+			if (_enemies() <= 0 and _wave_grace <= 0.0) or _elapsed > 42.0:
 				_set_phase("command")
 				_wave(["sb_phantom", "sb_phantom", "sb_enforcer"], "spawn_command", "trained")
 		"command":
 			integrity -= 0.42 * delta
-			if _enemies() <= 0 or _elapsed > 38.0:
+			if (_enemies() <= 0 and _wave_grace <= 0.0) or _elapsed > 38.0:
 				_set_phase("grid_down")
 		"grid_down":
 			integrity -= 0.9 * delta
@@ -186,6 +189,9 @@ func _wave(ids: Array, marker: String, skill: String) -> void:
 		origin = (raw as Transform3D).origin
 	elif raw is Vector3:
 		origin = raw
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	var hunt := player.global_position if player else origin
+	var spawned := 0
 	for i in ids.size():
 		var e := Shadowbreaker.new()
 		_spawns.add_child(e)
@@ -197,13 +203,22 @@ func _wave(ids: Array, marker: String, skill: String) -> void:
 			origin + Vector3(-4, 0, 5),
 		]
 		e.setup(str(ids[i]), skill, pts)
+		e.alert_to(hunt)
+		spawned += 1
+	_wave_grace = 1.5
+	print("Broken Perimeter wave %s x%d at %s" % [marker, spawned, origin])
+	if marker == "spawn_gate":
+		EventBus.notify.emit("HOSTILES AT THE GATE")
 	VfxBus.breach_distortion()
 
 
 func _enemies() -> int:
 	var n := 0
 	for node in get_tree().get_nodes_in_group("shadowbreakers"):
-		if node is Shadowbreaker and not (node as Shadowbreaker).health.dead:
+		if node is Shadowbreaker:
+			if not (node as Shadowbreaker).health.dead:
+				n += 1
+		elif is_instance_valid(node) and node.get("health") != null and not node.health.dead:
 			n += 1
 	return n
 

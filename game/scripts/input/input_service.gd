@@ -7,11 +7,19 @@ var ads_held: bool = false
 var sprint_held: bool = false
 var crouch_held: bool = false
 
-var _look_sens := 0.12
-var _touch_look_sens := 0.18
+# Radians per mouse pixel at look_sensitivity 1.0. 0.12 was ~75× too hot for pointer-lock web mice.
+const LOOK_BASE := 0.00165
+const LOOK_MIN := 0.25
+const LOOK_MAX := 2.5
+const LOOK_STEP := 0.15
+const SETTINGS_PATH := "user://ff_settings.cfg"
+
+var look_sensitivity := 1.0
+var _touch_look_sens := 0.004
 
 
 func _ready() -> void:
+	_load_settings()
 	_bind()
 	# Web requires a user click before pointer lock. Capture happens from Start Operation.
 
@@ -34,6 +42,8 @@ func _bind() -> void:
 	_key("debug_reset", KEY_F9)
 	_key("ui_cancel", KEY_ESCAPE)
 	_key("ui_accept", KEY_ENTER)
+	_key("look_down", KEY_BRACKETLEFT)
+	_key("look_up", KEY_BRACKETRIGHT)
 
 
 func move_vector() -> Vector2:
@@ -44,7 +54,7 @@ func move_vector() -> Vector2:
 
 
 func look_delta() -> Vector2:
-	return touch_look * _touch_look_sens
+	return touch_look * _touch_look_sens * look_sensitivity
 
 
 func is_fire() -> bool:
@@ -64,9 +74,19 @@ func is_crouch() -> bool:
 
 
 func consume_look() -> Vector2:
-	var d := touch_look * _look_sens
+	var d := touch_look * LOOK_BASE * look_sensitivity
 	touch_look = Vector2.ZERO
 	return d
+
+
+func nudge_look(dir: int) -> void:
+	set_look_sensitivity(look_sensitivity + LOOK_STEP * float(dir))
+
+
+func set_look_sensitivity(v: float) -> void:
+	look_sensitivity = clampf(v, LOOK_MIN, LOOK_MAX)
+	_save_settings()
+	EventBus.notify.emit("Look sensitivity  %d%%" % int(round(look_sensitivity * 100.0)))
 
 
 func capture_mouse() -> void:
@@ -86,6 +106,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		touch_look += event.relative
+	if event.is_action_pressed("look_down"):
+		nudge_look(-1)
+	if event.is_action_pressed("look_up"):
+		nudge_look(1)
 	if event.is_action_pressed("ui_cancel"):
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -107,3 +131,16 @@ func _mouse(action: String, btn: MouseButton) -> void:
 	var ev := InputEventMouseButton.new()
 	ev.button_index = btn
 	InputMap.action_add_event(action, ev)
+
+
+func _load_settings() -> void:
+	var cf := ConfigFile.new()
+	if cf.load(SETTINGS_PATH) != OK:
+		return
+	look_sensitivity = clampf(float(cf.get_value("look", "sensitivity", 1.0)), LOOK_MIN, LOOK_MAX)
+
+
+func _save_settings() -> void:
+	var cf := ConfigFile.new()
+	cf.set_value("look", "sensitivity", look_sensitivity)
+	cf.save(SETTINGS_PATH)

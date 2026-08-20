@@ -22,6 +22,7 @@ static func spawn(parent: Node, xform: Transform3D) -> PlayerController:
 	cam.name = "Camera3D"
 	cam.current = true
 	cam.fov = 75.0
+	cam.near = 0.03
 	head.add_child(cam)
 	var ir := RayCast3D.new()
 	ir.name = "InteractRay"

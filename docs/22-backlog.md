@@ -32,7 +32,7 @@ Do not expand into BR, DMZ, ranked, store, battle pass, 27 weapons, 12 operators
 
 ## Known polish (does not block the web build)
 
-- **FPS grip.** Automated snap/curl at ship clearance. Index-in-the-well and support-corner contact will still miss on close-ups. Do not reopen the human Blender posing handoff.
+- **FPS grip / viewmodel crop.** Automated snap/curl at ship clearance. Index-in-the-well and support-corner contact still miss on close-ups. Hip/ADS were pulled inward for the web FOV so the clay arms sit on-frame; leftover crop at the screen edge is viewmodel framing, not a new grip bake. Do not reopen the human Blender posing handoff.
 - **LOD0 kit density.** Assault 36.2k / Phantom 32.9k vs ~22–25k / ~16–18k. Weight is kit tris; fold a cut into form polish if time allows.
 - **Clay materials / Ironfall graybox hulls.** Play path uses V0.2 character/weapon GLBs on the V0.1 depot. Textures and a denser gate overlay are quality work, not a gameplay gate.
 
